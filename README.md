@@ -157,7 +157,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full layout and conventions.
 
 | Check | What it does |
 | ----- | ------------ |
-| `Test (Node 20)` / `(Node 22)` / `(Node 24)` | `npm ci`, full suite, then `npm run verify` |
+| `Test (Node 22)` / `(Node 24)` | `npm ci`, full suite, then `npm run verify` |
 | `Runs without dependencies` | The suite with nothing installed, proving no runtime dependency crept in |
 
 #### Requiring the checks before merge
@@ -170,8 +170,8 @@ have run at least once before GitHub will list them:
 3. Name it (e.g. `main`), set **Enforcement status** to **Active**.
 4. Under **Target branches**, add **Include default branch**.
 5. Tick **Require a pull request before merging**.
-6. Tick **Require status checks to pass**, then add all four:
-   `Test (Node 20)`, `Test (Node 22)`, `Test (Node 24)`,
+6. Tick **Require status checks to pass**, then add all three:
+   `Test (Node 22)`, `Test (Node 24)`,
    `Runs without dependencies`.
 7. Tick **Require branches to be up to date before merging** so a green PR can't
    merge against a stale base.
