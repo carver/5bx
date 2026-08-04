@@ -40,11 +40,21 @@ leg raise.
   WebAudio so there are no sound files to download.
 - **Exercise 5 interval cues** — the "every 75 steps, do 10 *X*" break is cued
   from the clock, so you don't have to watch the screen or tap a counter while
-  running in place. The step estimate **freezes** during each jump block (you
-  aren't taking steps), and since those blocks come out of the same 6 minutes,
-  the running cadence is scaled up so the estimate still lands exactly on the
-  target at 6:00. Tune the assumed block duration with
-  `CONFIG.intervalMovementSeconds`.
+  running in place. Two live readouts:
+
+  ```
+  ~317 of 400 steps        running total for the exercise
+  ~17 of 75 · set 5 of 6   restarts at every break
+  ```
+
+  The per-set line matches counting 1–75 in your head and starting over. The
+  last set is the remainder, not a full 75 (400 steps = 75×5 + 25, so 6 sets
+  and 5 breaks — there is no break after the final step).
+
+  Both readouts **freeze** during a jump block, since you aren't taking steps.
+  Because those blocks come out of the same 6 minutes, the running cadence is
+  scaled up so the estimate still lands exactly on the target at 6:00. Tune the
+  assumed block duration with `CONFIG.intervalMovementSeconds`.
 - **Progression** — a level is only offered when a session hit *every* target
   **and** you have logged sessions on enough distinct days at that level.
 - **History** — day-at-level progress, streak, a 9-week calendar, and a step

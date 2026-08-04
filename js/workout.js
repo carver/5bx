@@ -132,7 +132,7 @@ export function renderWorkout(root, { onExit }) {
 
   function updatePace(view, pace, elapsed) {
     const now = paceAt(pace, elapsed);
-    view.setSteps(now.steps, now.inBreak);
+    view.setPace(now);
 
     if (now.inBreak) {
       if (!pace.inBreak) {
@@ -155,6 +155,9 @@ export function renderWorkout(root, { onExit }) {
   function buildRunningView(exercise, pace) {
     const timeNode = el('div.clock', {}, formatTime(TIMING_SECONDS[session.index]));
     const stepNode = pace ? el('p.steps', {}, `0 of ${targets[session.index]} steps`) : null;
+    // Per-set count, restarting at each break to match counting in your head.
+    // Pointless if the whole run is a single set, so only shown when it isn't.
+    const setNode = pace && pace.setCount > 1 ? el('p.set-steps', {}, '') : null;
 
     const bannerTitle = el('div.banner-title', {}, '');
     const bannerSub = el('div.banner-sub', {}, '');
@@ -181,6 +184,7 @@ export function renderWorkout(root, { onExit }) {
         el('p.target-small', {},
           `Target: ${targets[session.index]} ${exercise.unit}`),
         stepNode,
+        setNode,
         banner,
       ),
       el('div.actions',
@@ -209,10 +213,15 @@ export function renderWorkout(root, { onExit }) {
     return {
       node,
       setTime: (remaining) => { timeNode.textContent = formatTime(remaining); },
-      setSteps: (n, frozen) => {
+      setPace: (state) => {
         if (!stepNode) return;
-        stepNode.textContent = `~${n} of ${targets[session.index]} steps`;
-        stepNode.classList.toggle('frozen', !!frozen);
+        stepNode.textContent =
+          `~${state.steps} of ${targets[session.index]} steps`;
+        stepNode.classList.toggle('frozen', state.inBreak);
+        if (!setNode) return;
+        setNode.textContent = `~${state.setSteps} of ${state.setTarget} · ` +
+          `set ${state.setIndex} of ${pace.setCount}`;
+        setNode.classList.toggle('frozen', state.inBreak);
       },
       showBanner: (title, sub) => {
         bannerTitle.textContent = title;

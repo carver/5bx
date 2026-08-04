@@ -289,8 +289,17 @@ h1, h2 { margin: 0; line-height: 1.25; }
   font-variant-numeric: tabular-nums;
 }
 
+/* Per-set count, restarting from zero after each jump block. */
+.set-steps {
+  margin: -6px 0 0;
+  font-size: 1.35rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Held still during a jump block — you're not taking steps right now. */
-.steps.frozen { opacity: 0.45; }
+.steps.frozen,
+.set-steps.frozen { opacity: 0.45; }
 
 .note-aside {
   margin: 8px 0 0;
