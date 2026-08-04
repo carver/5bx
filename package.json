@@ -5,7 +5,14 @@
   "description": "Guided 11-minute 5BX workout PWA. Static site — nothing to build or install.",
   "type": "module",
   "scripts": {
+    "test": "node --test --test-reporter=spec test/*.test.js",
     "verify": "node tools/verify-config.mjs",
     "serve": "python3 -m http.server 8000"
+  },
+  "devDependencies": {
+    "jsdom": "^26.0.0"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

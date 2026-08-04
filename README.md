@@ -86,7 +86,7 @@ left-foot touchdown), not a rep count.
 After editing, sanity-check your changes:
 
 ```sh
-node tools/verify-config.mjs     # or: npm run verify
+npm run verify     # or: node tools/verify-config.mjs
 ```
 
 It checks the shape of every chart and, most usefully, that no rep target
@@ -98,12 +98,71 @@ FAIL  chart 1 B: 5 targets — [12,12,14,8]
 FAIL  chart 1: C is not easier than C- — exercise 3
 ```
 
-The verifier has zero dependencies and never runs in the browser. `package.json`
-exists only so Node treats the `.js` files as ES modules — there is nothing to
-install and nothing to build.
-
 Finally, bump `CACHE_VERSION` in `sw.js` so returning visitors don't get served
 the stale cached copy.
+
+## Development
+
+```sh
+npm run serve      # static server on http://localhost:8000
+npm test           # full test suite
+npm run verify     # quick check on js/config.js
+```
+
+ES modules don't load over `file://`, so use the server rather than opening
+`index.html` directly. Service workers and notifications need a secure context —
+`localhost` counts, so no HTTPS setup is needed locally.
+
+### Tests
+
+235 tests on Node's built-in runner (`node:test`) — no test framework.
+
+```
+test/config.test.js   chart data, rep tables vs the printed source, age table
+test/state.test.js    days-at-level, the advance gate, streaks, persistence
+test/pace.test.js     exercise 5 pacing, jump blocks, per-set counter
+test/static.test.js   service worker cache list, manifest, relative paths
+test/dom.test.js      renders every view, drives a full workout (needs jsdom)
+```
+
+`npm test` works **on a bare checkout with nothing installed** — the DOM suite
+skips itself and the other ~208 tests still run. Run `npm install` to enable it.
+
+`jsdom` is the only dependency in the repo, it's dev-only, and the app itself
+ships zero runtime dependencies — there's a test enforcing that. `package.json`
+exists so Node treats the files as ES modules and to hold the test scripts;
+nothing is bundled, transpiled, or built.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full layout and conventions.
+
+### Continuous integration
+
+`.github/workflows/ci.yml` runs on every pull request and every push to `main`:
+
+| Check | What it does |
+| ----- | ------------ |
+| `Test (Node 20)` / `(Node 22)` / `(Node 24)` | `npm ci`, full suite, then `npm run verify` |
+| `Runs without dependencies` | The suite with nothing installed, proving no runtime dependency crept in |
+
+#### Requiring the checks before merge
+
+Workflows can't grant themselves this — it's a repo setting, and the checks must
+have run at least once before GitHub will list them:
+
+1. Push this repo and open one pull request so the checks appear.
+2. **Settings → Rules → Rulesets → New ruleset → New branch ruleset**.
+3. Name it (e.g. `main`), set **Enforcement status** to **Active**.
+4. Under **Target branches**, add **Include default branch**.
+5. Tick **Require a pull request before merging**.
+6. Tick **Require status checks to pass**, then add all four:
+   `Test (Node 20)`, `Test (Node 22)`, `Test (Node 24)`,
+   `Runs without dependencies`.
+7. Tick **Require branches to be up to date before merging** so a green PR can't
+   merge against a stale base.
+8. **Create**.
+
+Merging is then blocked until CI is green. (On older repos the equivalent lives
+under **Settings → Branches → Add branch protection rule**.)
 
 ## Running locally
 
@@ -161,12 +220,16 @@ js/
   timer.js          wall-clock countdown, screen wake lock
   audio.js          WebAudio cue tones
   ui.js             small DOM helpers
+test/               node:test suites (dev only)
 tools/
   verify-config.mjs dev-only config sanity check (not served)
+.github/workflows/
+  ci.yml            runs the suite on pull requests and pushes to main
 ```
 
-`package.json` and `tools/` are development conveniences and play no part in
-the deployed site — GitHub Pages just serves the static files.
+`package.json`, `test/`, `tools/`, and `.github/` are development conveniences
+and play no part in the deployed site — GitHub Pages just serves the static
+files.
 
 ## Known limitation: reminder reliability
 
