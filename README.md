@@ -1,5 +1,21 @@
 # 5BX
 
+**A daily 5BX workout helper**
+
+Use it here: https://carver.github.io/5bx/
+
+The [RCAF 5BX](https://csclub.uwaterloo.ca/~rfburger/5bx-plan.pdf) system is great for quick daily
+workouts. What's not so great is timing and tracking the data in the middle of working out.
+
+This app runs a timer for each exercise, reminding you which one is next. It helps you pace
+your running (in place) for the final leg. There's a minimal history view, too.
+
+Finally, I swapped out the sit-ups for a bird-dog progression, which is a safer core exercise.
+
+This is the end of the hand-written README. The rest was written by AI.
+
+## The gist
+
 A single-page guided workout app for a modified version of the RCAF **5BX Plan**:
 6 charts × 12 levels, 5 exercises, 11 minutes a day.
 
@@ -250,7 +266,7 @@ not a bug in the app. This is documented in `js/notifications.js` and `sw.js`.
 ## Attribution
 
 Exercise descriptions and rep tables are adapted from the Royal Canadian Air
-Force *5BX Plan for Physical Fitness* (1961). The bird dog progression follows
-<https://nick-e.com/bird-dog/>.
+Force [*5BX Plan for Physical Fitness*](https://csclub.uwaterloo.ca/~rfburger/5bx-plan.pdf) (1961).
+The bird dog progression follows <https://nick-e.com/bird-dog/>.
 
 Not medical advice.
