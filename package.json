@@ -10,7 +10,7 @@
     "serve": "python3 -m http.server 8000"
   },
   "devDependencies": {
-    "jsdom": "^26.0.0"
+    "jsdom": "^30.0.1"
   },
   "engines": {
     "node": ">=22"
