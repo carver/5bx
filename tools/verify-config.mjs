@@ -21,6 +21,7 @@ globalThis.localStorage = {
 
 const cfg = await import('../js/config.js');
 const store = await import('../js/state.js');
+const { createPace, paceAt } = await import('../js/pace.js');
 
 let failures = 0;
 function check(name, condition, detail = '') {
@@ -81,6 +82,54 @@ for (const chart of cfg.CHARTS) {
     check(`chart ${id}: ${cfg.LEVELS[i]} is not easier than ${cfg.LEVELS[i - 1]}`,
       dropped.length === 0, dropped.join(', '));
   }
+}
+
+/* ---------------------------------------------- exercise 5 pacing sanity */
+
+/*
+ * The interval jump blocks come out of the same 6 minutes as the run, so the
+ * running cadence has to rise to compensate. Flag two ways that can go wrong:
+ * blocks that no longer fit in the exercise at all, and a resulting cadence
+ * that no human is going to hit.
+ */
+const RUN_SECONDS = cfg.TIMING_SECONDS[4];
+let fastest = { cadence: 0 };
+
+for (const chart of cfg.CHARTS) {
+  const interval = chart.exercises[4].interval;
+  if (!interval) continue;
+  for (const level of cfg.LEVELS) {
+    const target = chart.reps[level]?.[4];
+    if (!Number.isInteger(target)) continue;
+
+    const pace = createPace({
+      targetSteps: target, totalSeconds: RUN_SECONDS, interval,
+    });
+    const blockTime = pace.blocks * pace.jumpSeconds;
+
+    check(`chart ${chart.id} ${level}: jump blocks fit inside exercise 5`,
+      blockTime < RUN_SECONDS * 0.75,
+      `${pace.blocks} blocks x ${pace.jumpSeconds}s = ${blockTime}s of ` +
+      `${RUN_SECONDS}s — lower CONFIG.intervalMovementSeconds`);
+
+    check(`chart ${chart.id} ${level}: step estimate reaches the target`,
+      paceAt(pace, RUN_SECONDS).steps === target,
+      `ends at ${paceAt(pace, RUN_SECONDS).steps} of ${target}`);
+
+    // Steps count left-foot touchdowns, so double for true cadence.
+    const cadence = pace.stepsPerSecond * 60 * 2;
+    if (cadence > fastest.cadence) {
+      fastest = { cadence, chart: chart.id, level, target };
+    }
+  }
+}
+
+// Advisory, not a failure — the plan itself is demanding at the top charts.
+if (fastest.cadence > 240) {
+  console.log(`NOTE  fastest implied cadence is ${Math.round(fastest.cadence)} ` +
+    `steps/min (chart ${fastest.chart} ${fastest.level}, ` +
+    `${fastest.target} steps). Typical running cadence is 160-200. ` +
+    'Lower CONFIG.intervalMovementSeconds if the estimate outruns you.');
 }
 
 /* ------------------------------------------------------- age & progression */

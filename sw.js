@@ -28,6 +28,7 @@ const SHELL_FILES = [
   './js/ui.js',
   './js/timer.js',
   './js/audio.js',
+  './js/pace.js',
   './js/workout.js',
   './js/home.js',
   './js/history.js',

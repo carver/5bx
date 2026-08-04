@@ -39,8 +39,12 @@ leg raise.
 - **Audible + haptic cues** at the end of each exercise, synthesised with
   WebAudio so there are no sound files to download.
 - **Exercise 5 interval cues** — the "every 75 steps, do 10 *X*" break is cued
-  from the clock, pacing the target step count across the 6 minutes, so you
-  don't have to watch the screen or tap a counter while running in place.
+  from the clock, so you don't have to watch the screen or tap a counter while
+  running in place. The step estimate **freezes** during each jump block (you
+  aren't taking steps), and since those blocks come out of the same 6 minutes,
+  the running cadence is scaled up so the estimate still lands exactly on the
+  target at 6:00. Tune the assumed block duration with
+  `CONFIG.intervalMovementSeconds`.
 - **Progression** — a level is only offered when a session hit *every* target
   **and** you have logged sessions on enough distinct days at that level.
 - **History** — day-at-level progress, streak, a 9-week calendar, and a step
@@ -62,6 +66,7 @@ Everything you'd want to tune lives in **`js/config.js`** and nothing else:
 | Per-exercise durations | `TIMING_SECONDS` |
 | Age → minimum days table | `MIN_DAYS_BY_AGE` |
 | Chart 2 bird-dog wording | `CONFIG.birdDogChart2Variant` (`'extension'` or `'raise'`) |
+| Assumed seconds per interval jump | `CONFIG.intervalMovementSeconds` (or `secondsEach` on one chart's `interval`) |
 | Deconditioning thresholds | `DECONDITIONING` |
 
 Each `reps` entry is a 5-element array positionally matching `exercises`. The
@@ -142,6 +147,7 @@ js/
   history.js        progress & history
   settings.js       settings
   notifications.js  daily reminder scheduling
+  pace.js           exercise 5 step pacing / jump-block schedule
   timer.js          wall-clock countdown, screen wake lock
   audio.js          WebAudio cue tones
   ui.js             small DOM helpers

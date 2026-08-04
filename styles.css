@@ -289,6 +289,15 @@ h1, h2 { margin: 0; line-height: 1.25; }
   font-variant-numeric: tabular-nums;
 }
 
+/* Held still during a jump block — you're not taking steps right now. */
+.steps.frozen { opacity: 0.45; }
+
+.note-aside {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
 .banner {
   width: 100%;
   background: var(--accent);

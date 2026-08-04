@@ -11,8 +11,9 @@
  * .btn sizing in styles.css) because the app is used with shaky hands.
  */
 
-import { getChart, getTargets, TIMING_SECONDS, levelName, nextPosition }
-  from './config.js';
+import { getChart, getTargets, TIMING_SECONDS, levelName, nextPosition,
+  intervalBreakSeconds } from './config.js';
+import { createPace, paceAt } from './pace.js';
 import * as store from './state.js';
 import { Countdown, acquireWakeLock, releaseWakeLock } from './timer.js';
 import { unlockAudio, cueTimeUp, cueInterval, cueBlip } from './audio.js';
@@ -79,10 +80,14 @@ export function renderWorkout(root, { onExit }) {
 
   function intervalNote(exercise) {
     const { every, count, name, text } = exercise.interval;
+    const breakSeconds = Math.round(intervalBreakSeconds(exercise.interval));
     return el('div.note',
       {},
       el('strong', {}, `Every ${every} steps: ${count} ${name}. `),
       text,
+      el('p.note-aside', {},
+        `The step estimate pauses for about ${breakSeconds}s during each ` +
+        'block, and the running pace allows for that.'),
     );
   }
 
@@ -97,19 +102,16 @@ export function renderWorkout(root, { onExit }) {
     acquireWakeLock();
 
     // Exercise 5 only: pace the "every 75 steps do N jumps" cue off the clock,
-    // since counting taps while running in place isn't realistic. The target
-    // step count spread over the 6 minutes gives an expected cadence.
-    const interval = exercise.interval;
-    const pace = interval
-      ? {
-          secondsPerBlock: TIMING_SECONDS[i] / (targets[i] / interval.every),
-          totalBlocks: Math.floor(targets[i] / interval.every),
-          nextCueAt: 0,
-          blocksDone: 0,
-          bannerUntil: 0,
-        }
+    // since counting taps while running in place isn't realistic. See pace.js
+    // — the estimate freezes during each jump block and the cadence allows for
+    // the time those blocks take.
+    const pace = exercise.interval
+      ? createPace({
+          targetSteps: targets[i],
+          totalSeconds: TIMING_SECONDS[i],
+          interval: exercise.interval,
+        })
       : null;
-    if (pace) pace.nextCueAt = pace.secondsPerBlock;
 
     const view = buildRunningView(exercise, pace);
     mount(root, view.node);
@@ -118,7 +120,7 @@ export function renderWorkout(root, { onExit }) {
       TIMING_SECONDS[i],
       (remaining, elapsed) => {
         view.setTime(remaining);
-        if (pace) updatePace(view, pace, elapsed, interval);
+        if (pace) updatePace(view, pace, elapsed);
       },
       () => {
         cueTimeUp();
@@ -128,22 +130,24 @@ export function renderWorkout(root, { onExit }) {
     timer.start();
   }
 
-  function updatePace(view, pace, elapsed, interval) {
-    const stepsPerSecond = targets[session.index] / TIMING_SECONDS[session.index];
-    view.setSteps(Math.min(targets[session.index],
-      Math.floor(elapsed * stepsPerSecond)));
+  function updatePace(view, pace, elapsed) {
+    const now = paceAt(pace, elapsed);
+    view.setSteps(now.steps, now.inBreak);
 
-    if (elapsed >= pace.nextCueAt && pace.blocksDone < pace.totalBlocks) {
-      pace.blocksDone += 1;
-      pace.nextCueAt += pace.secondsPerBlock;
-      pace.bannerUntil = elapsed + 20;   // banner clears itself if ignored
-      cueInterval();
+    if (now.inBreak) {
+      if (!pace.inBreak) {
+        pace.inBreak = true;
+        cueInterval();
+      }
       view.showBanner(
-        `${interval.count} ${interval.name}`,
-        `Break ${pace.blocksDone} of ${pace.totalBlocks}`,
+        `${pace.count} ${pace.name}`,
+        `Break ${now.blockIndex} of ${pace.blocks} · ` +
+        `${Math.ceil(now.breakRemaining)}s`,
       );
-    } else if (pace.bannerUntil && elapsed > pace.bannerUntil) {
-      pace.bannerUntil = 0;
+    } else if (pace.inBreak) {
+      // Block finished — cue the return to running and clear the banner.
+      pace.inBreak = false;
+      cueBlip();
       view.hideBanner();
     }
   }
@@ -205,10 +209,10 @@ export function renderWorkout(root, { onExit }) {
     return {
       node,
       setTime: (remaining) => { timeNode.textContent = formatTime(remaining); },
-      setSteps: (n) => {
-        if (stepNode) {
-          stepNode.textContent = `~${n} of ${targets[session.index]} steps`;
-        }
+      setSteps: (n, frozen) => {
+        if (!stepNode) return;
+        stepNode.textContent = `~${n} of ${targets[session.index]} steps`;
+        stepNode.classList.toggle('frozen', !!frozen);
       },
       showBanner: (title, sub) => {
         bannerTitle.textContent = title;

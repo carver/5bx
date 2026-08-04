@@ -26,6 +26,22 @@ export const CONFIG = {
    * Flip this to 'raise' to show the easier description instead.
    */
   birdDogChart2Variant: 'extension',
+
+  /*
+   * Assumed duration of ONE bonus movement in exercise 5's interval breaks
+   * (one scissor jump, one astride jump, one half knee bend, ...).
+   *
+   * This only affects the on-screen step ESTIMATE during exercise 5. The step
+   * count freezes for `count * this` seconds while you do a block, because you
+   * are jumping rather than running. Since those breaks come out of the same
+   * 6 minutes, the running cadence is scaled up so the estimate still reaches
+   * the target step count exactly at 6:00. The 11-minute timing is untouched.
+   *
+   * A rough guess — tune it if the estimate runs ahead of or behind your real
+   * count. Per-chart override: set `secondsEach` on that chart's exercise 5
+   * `interval` object.
+   */
+  intervalMovementSeconds: 1,
 };
 
 /* -------------------------------------------------------------------------
@@ -582,6 +598,12 @@ export const CHARTS = [
 
 export function getChart(chartId) {
   return CHARTS.find((c) => c.id === chartId) || CHARTS[0];
+}
+
+/** How long one block of interval jumps is assumed to take, in seconds. */
+export function intervalBreakSeconds(interval) {
+  const each = interval.secondsEach ?? CONFIG.intervalMovementSeconds;
+  return interval.count * each;
 }
 
 export function levelName(levelIndex) {
