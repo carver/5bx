@@ -1,0 +1,11 @@
+{
+  "name": "5bx",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Guided 11-minute 5BX workout PWA. Static site — nothing to build or install.",
+  "type": "module",
+  "scripts": {
+    "verify": "node tools/verify-config.mjs",
+    "serve": "python3 -m http.server 8000"
+  }
+}

@@ -1,0 +1,472 @@
+/*
+ * 5BX styles — hand-written, mobile-first, no framework.
+ *
+ * Two things drive most decisions here:
+ *  - Speed: system fonts only, no images, no downloads beyond this file.
+ *  - Hand tremor: every control reachable during a workout is at least
+ *    48x48px, primary actions are 64px+ tall, and adjacent controls are
+ *    separated by wide gaps so a shaky tap cannot land on the wrong one.
+ */
+
+/* ------------------------------------------------------------------ theme */
+
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --surface-2: #eef0f4;
+  --text: #16191f;
+  --text-dim: #5c6470;
+  --border: #dde1e8;
+  --accent: #1f6f4a;
+  --accent-text: #ffffff;
+  --ok: #1f6f4a;
+  --miss: #a4362c;
+  --warn-bg: #fdf3e3;
+  --warn-border: #e6c98a;
+  --radius: 12px;
+  --gap: 16px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #12161c;
+    --surface: #1a1f27;
+    --surface-2: #232935;
+    --text: #e8ecf1;
+    --text-dim: #98a2b1;
+    --border: #2c3441;
+    --accent: #3ddc97;
+    --accent-text: #08130d;
+    --ok: #3ddc97;
+    --miss: #ff8a7a;
+    --warn-bg: #2b2415;
+    --warn-border: #6b5526;
+  }
+}
+
+/* Manual override from Settings wins over the OS preference, both ways. */
+:root[data-theme='light'] {
+  --bg: #f6f7f9; --surface: #ffffff; --surface-2: #eef0f4;
+  --text: #16191f; --text-dim: #5c6470; --border: #dde1e8;
+  --accent: #1f6f4a; --accent-text: #ffffff;
+  --ok: #1f6f4a; --miss: #a4362c;
+  --warn-bg: #fdf3e3; --warn-border: #e6c98a;
+}
+
+:root[data-theme='dark'] {
+  --bg: #12161c; --surface: #1a1f27; --surface-2: #232935;
+  --text: #e8ecf1; --text-dim: #98a2b1; --border: #2c3441;
+  --accent: #3ddc97; --accent-text: #08130d;
+  --ok: #3ddc97; --miss: #ff8a7a;
+  --warn-bg: #2b2415; --warn-border: #6b5526;
+}
+
+/* ------------------------------------------------------------------- base */
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  font-size: 17px;
+  line-height: 1.5;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app {
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: max(16px, env(safe-area-inset-top)) 16px
+           max(24px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+h1, h2 { margin: 0; line-height: 1.25; }
+
+.view-title {
+  font-size: 1.5rem;
+  letter-spacing: -0.01em;
+}
+
+.section-title {
+  font-size: 1.05rem;
+  margin-top: 4px;
+}
+
+/* ------------------------------------------------------------------ cards */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card-hero { gap: 8px; }
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+
+.hero-position {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.hero-days, .hero-hint, .help, .summary-note, .empty {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+.hero-hint.ready { color: var(--ok); }
+
+.help.warn { color: var(--miss); }
+
+.progress {
+  height: 8px;
+  background: var(--surface-2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+}
+
+.note {
+  background: var(--surface-2);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  padding: 12px 14px;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+.note strong { color: var(--text); }
+
+.note-warn {
+  background: var(--warn-bg);
+  border-left-color: var(--warn-border);
+}
+
+/* ---------------------------------------------------------------- buttons */
+
+.btn {
+  /* 56px floor comfortably clears the 48px minimum target size. */
+  min-height: 56px;
+  min-width: 48px;
+  padding: 14px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.btn:active { transform: translateY(1px); }
+
+.btn-primary {
+  min-height: 68px;
+  font-size: 1.15rem;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+
+.btn-hero { min-height: 76px; font-size: 1.25rem; }
+
+.btn-secondary { background: var(--surface-2); }
+
+.btn-quiet {
+  background: none;
+  border-color: transparent;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+.btn-danger { color: var(--miss); border-color: var(--miss); background: none; }
+
+.btn:disabled { opacity: 0.5; }
+
+/* Wide spacing so a tremor cannot cross from one control to its neighbour. */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.actions-row {
+  display: flex;
+  gap: 18px;
+}
+
+.actions-row > .btn { flex: 1; }
+
+.actions-answer { gap: 26px; }
+
+.btn-yes { background: var(--ok); border-color: var(--ok); }
+
+.btn-no {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.nav {
+  display: flex;
+  gap: 18px;
+  margin-top: 8px;
+}
+
+.nav > .btn { flex: 1; }
+
+/* --------------------------------------------------------------- workout */
+
+.workout-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.step-count { font-weight: 600; color: var(--text); }
+
+.exercise-name {
+  font-size: 1.3rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.target { margin: 0; font-size: 1.1rem; }
+.target strong { font-size: 1.4rem; }
+.target-sep { color: var(--text-dim); }
+.target-small { margin: 0; color: var(--text-dim); font-size: 0.95rem; }
+
+.instructions { margin: 0; }
+
+.question { margin: 0; font-size: 1.15rem; font-weight: 600; }
+
+.card-run { align-items: center; text-align: center; }
+
+.clock {
+  font-size: 4.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.is-paused .clock { opacity: 0.45; }
+
+.steps {
+  margin: 0;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.banner {
+  width: 100%;
+  background: var(--accent);
+  color: var(--accent-text);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.banner.hidden { display: none; }
+.banner-title { font-size: 1.25rem; font-weight: 700; }
+.banner-sub { font-size: 0.85rem; opacity: 0.85; }
+
+/* --------------------------------------------------------------- summary */
+
+.summary-line { margin: 0; color: var(--text-dim); font-size: 0.9rem; }
+.big-note { margin: 0; font-size: 1.35rem; font-weight: 650; }
+
+.result-list, .preview, .log-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.result-list li {
+  display: grid;
+  grid-template-columns: 1.5rem 1fr auto;
+  align-items: baseline;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.result-list li:last-child { border-bottom: none; }
+.result-mark { font-weight: 700; }
+.result-list .ok .result-mark { color: var(--ok); }
+.result-list .miss .result-mark { color: var(--miss); }
+.result-target { color: var(--text-dim); font-size: 0.85rem; }
+
+/* ---------------------------------------------------------- home preview */
+
+.stats { display: flex; gap: 12px; }
+
+.stat {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  text-align: center;
+}
+
+.stat-value { display: block; font-size: 1.5rem; font-weight: 700; }
+.stat-label { display: block; font-size: 0.75rem; color: var(--text-dim); }
+
+.preview {
+  counter-reset: ex;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px 16px;
+}
+
+.preview li {
+  counter-increment: ex;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.preview li:last-child { border-bottom: none; }
+.preview li::before { content: counter(ex) '.'; color: var(--text-dim); }
+.preview-name { flex: 1; font-size: 0.95rem; }
+.preview-target {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------- history */
+
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+.cell {
+  aspect-ratio: 1;
+  border-radius: 3px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  display: block;
+}
+
+.cell.partial { background: color-mix(in srgb, var(--accent) 40%, var(--surface-2)); }
+.cell.complete { background: var(--accent); border-color: var(--accent); }
+.cell.today { outline: 2px solid var(--text-dim); outline-offset: 1px; }
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend .cell { width: 12px; height: 12px; aspect-ratio: auto; }
+
+.sparkline {
+  width: 100%;
+  height: 64px;
+  color: var(--accent);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px;
+}
+
+.log-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+
+.log-list li:last-child { border-bottom: none; }
+.log-meta { color: var(--text-dim); font-size: 0.8rem; text-align: right; }
+.log-list .ok .log-main { color: var(--ok); }
+
+/* -------------------------------------------------------------- settings */
+
+.field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 56px;
+}
+
+.field-label { font-weight: 600; font-size: 0.95rem; }
+
+.input {
+  min-height: 48px;
+  min-width: 8rem;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+}
+
+.checkbox {
+  /* Oversized so the toggle is easy to hit. */
+  width: 32px;
+  height: 32px;
+  margin: 0 8px 0 0;
+  accent-color: var(--accent);
+}
+
+/* ------------------------------------------------------------ reduced UI */
+
+@media (prefers-reduced-motion: reduce) {
+  .btn:active { transform: none; }
+}
+
+/* Slightly roomier on wider screens, but the layout stays single-column. */
+@media (min-width: 480px) {
+  body { font-size: 18px; }
+  .clock { font-size: 5rem; }
+}
