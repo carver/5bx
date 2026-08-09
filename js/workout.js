@@ -13,7 +13,7 @@
 
 import { getChart, getTargets, TIMING_SECONDS, levelName, nextPosition,
   intervalBreakSeconds } from './config.js';
-import { createPace, paceAt } from './pace.js';
+import { createPace, paceAt, estimateAt } from './pace.js';
 import * as store from './state.js';
 import { Countdown, acquireWakeLock, releaseWakeLock } from './timer.js';
 import { unlockAudio, cueTimeUp, cueInterval, cueBlip } from './audio.js';
@@ -121,6 +121,7 @@ export function renderWorkout(root, { onExit }) {
       (remaining, elapsed) => {
         view.setTime(remaining);
         if (pace) updatePace(view, pace, elapsed);
+        else view.setEstimate(estimateAt(elapsed, TIMING_SECONDS[i], targets[i]));
       },
       () => {
         cueTimeUp();
@@ -154,7 +155,10 @@ export function renderWorkout(root, { onExit }) {
 
   function buildRunningView(exercise, pace) {
     const timeNode = el('div.clock', {}, formatTime(TIMING_SECONDS[session.index]));
-    const stepNode = pace ? el('p.steps', {}, `0 of ${targets[session.index]} steps`) : null;
+    // Live estimate of where you should be in the set, counting up over the
+    // exercise's duration — paced exactly like exercise 5's step estimate.
+    const stepNode = el('p.steps', {},
+      `0 of ${targets[session.index]} ${exercise.unit}`);
     // Per-set count, restarting at each break to match counting in your head.
     // Pointless if the whole run is a single set, so only shown when it isn't.
     const setNode = pace && pace.setCount > 1 ? el('p.set-steps', {}, '') : null;
@@ -213,10 +217,13 @@ export function renderWorkout(root, { onExit }) {
     return {
       node,
       setTime: (remaining) => { timeNode.textContent = formatTime(remaining); },
-      setPace: (state) => {
-        if (!stepNode) return;
+      setEstimate: (count) => {
         stepNode.textContent =
-          `~${state.steps} of ${targets[session.index]} steps`;
+          `~${count} of ${targets[session.index]} ${exercise.unit}`;
+      },
+      setPace: (state) => {
+        stepNode.textContent =
+          `~${state.steps} of ${targets[session.index]} ${exercise.unit}`;
         stepNode.classList.toggle('frozen', state.inBreak);
         if (!setNode) return;
         setNode.textContent = `~${state.setSteps} of ${state.setTarget} · ` +

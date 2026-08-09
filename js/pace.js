@@ -129,3 +129,16 @@ export function paceAt(pace, elapsed) {
     setIndex: setIndex + 1, // 1-based for display
   };
 }
+
+/**
+ * Straight-line rep estimate for exercises 1-4: no jump blocks to pause for,
+ * just a steady climb from 0 to `target` over `totalSeconds`. Used to show
+ * roughly where in the set you should be, the same way exercise 5 does.
+ *
+ * Same epsilon trick as `paceAt` so a `1e-9`-shy float lands on the target
+ * at 0:00 remaining instead of one rep short.
+ */
+export function estimateAt(elapsed, totalSeconds, target) {
+  const ratio = totalSeconds > 0 ? elapsed / totalSeconds : 1;
+  return Math.max(0, Math.min(target, Math.floor(ratio * target + 1e-9)));
+}
