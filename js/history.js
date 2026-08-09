@@ -1,6 +1,6 @@
 /* Progress & history view: days at level, streak, calendar, level movement. */
 
-import { LEVELS, CHARTS, levelName, absoluteLevel } from './config.js';
+import { levelName, absoluteLevel } from './config.js';
 import * as store from './state.js';
 import { el, mount, formatDate, plural } from './ui.js';
 
@@ -102,20 +102,23 @@ function calendar(sessions) {
 
 /**
  * Level movement as a step chart. The y value is the absolute position in the
- * whole 72-level program, so a chart change reads as a continuous climb.
+ * whole 72-level program, but the scale tops out at the highest level you've
+ * actually reached (rather than the fixed 72-level ceiling) so early progress
+ * isn't squashed flat at the bottom of the chart.
  */
 function sparkline(levelLog) {
   const W = 300;
   const H = 64;
   const PAD = 4;
-  const maxLevel = CHARTS.length * LEVELS.length - 1;
+  const values = levelLog.map((entry) =>
+    absoluteLevel(entry.chartId, entry.levelIndex));
+  const maxLevel = Math.max(1, ...values);
 
   const points = levelLog.map((entry, i) => {
     const x = levelLog.length === 1
       ? W / 2
       : PAD + (i / (levelLog.length - 1)) * (W - PAD * 2);
-    const value = absoluteLevel(entry.chartId, entry.levelIndex);
-    const y = H - PAD - (value / maxLevel) * (H - PAD * 2);
+    const y = H - PAD - (values[i] / maxLevel) * (H - PAD * 2);
     return [x, y];
   });
 
