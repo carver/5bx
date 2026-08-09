@@ -10,7 +10,7 @@
  * visitors keep getting the old cached copy.
  */
 
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const SHELL_CACHE = `5bx-shell-${CACHE_VERSION}`;
 
 /* Cache used as a key/value store shared with the page (reminder settings). */
@@ -39,6 +39,8 @@ const SHELL_FILES = [
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-maskable-512.png',
+  './icons/icon-badge.svg',
+  './icons/icon-badge-96.png',
 ];
 
 /* ---------------------------------------------------------------- install */
@@ -161,7 +163,7 @@ async function maybeNotify() {
   await self.registration.showNotification('Time for your 5BX', {
     body: '11 minutes. Five exercises.',
     icon: './icons/icon-192.png',
-    badge: './icons/icon-192.png',
+    badge: './icons/icon-badge-96.png',
     tag: '5bx-daily',
     renotify: false,
   });

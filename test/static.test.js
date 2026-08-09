@@ -148,12 +148,36 @@ describe('icons', () => {
     assert.deepEqual(pngSize('icons/icon-512.png'), { width: 512, height: 512 });
     assert.deepEqual(pngSize('icons/icon-maskable-512.png'),
       { width: 512, height: 512 });
+    assert.deepEqual(pngSize('icons/icon-badge-96.png'), { width: 96, height: 96 });
   });
 
   test('the SVG icon is well-formed enough to parse', () => {
     const svg = read('icons/icon.svg');
     assert.match(svg, /<svg[^>]+viewBox="0 0 512 512"/);
     assert.match(svg, /<\/svg>\s*$/);
+  });
+
+  test('the badge icon has real transparency', () => {
+    // Android's notification badge/status-bar icon uses ONLY the alpha
+    // channel — every opaque pixel becomes a solid flat color. A badge PNG
+    // with no transparent pixels at all renders as a solid block (the "white
+    // square in notification areas" bug), so this specifically must NOT be
+    // the same fully-opaque file as the app icon.
+    const bytes = readFileSync(repoPath('icons/icon-badge-96.png'));
+    assert.equal(bytes[25], 6, 'must be PNG color type 6 (RGBA) — no alpha channel means no silhouette');
+  });
+
+  test('notifications never use the opaque app icon as the badge', () => {
+    // badge must point at the transparent silhouette, not icon-192 — see
+    // "the badge icon has real transparency" above for why.
+    for (const file of ['js/notifications.js', 'sw.js']) {
+      const contents = read(file);
+      const badgeLines = contents.split('\n').filter((l) => l.includes('badge:'));
+      assert.ok(badgeLines.length > 0, `${file} has no badge: usage to check`);
+      for (const line of badgeLines) {
+        assert.match(line, /icon-badge-96\.png/, `${file}: ${line.trim()}`);
+      }
+    }
   });
 });
 

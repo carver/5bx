@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="5BX">
+  <!--
+    Notification badge (Notification.badge). Android draws this using only
+    the alpha channel, flattened to a single OS-chosen color with no
+    background — any color info or opaque fill is discarded. So this is
+    silhouette-only: the same five-bars glyph as icon.svg, white on a fully
+    transparent canvas, with no background rect. rasterize with
+    tools/generate-badge-icon.mjs into icons/icon-badge-96.png.
+  -->
+  <g fill="#fff">
+    <rect x="68"  y="288" width="56" height="96"  rx="14"/>
+    <rect x="148" y="248" width="56" height="136" rx="14"/>
+    <rect x="228" y="208" width="56" height="176" rx="14"/>
+    <rect x="308" y="168" width="56" height="216" rx="14"/>
+    <rect x="388" y="128" width="56" height="256" rx="14"/>
+  </g>
+</svg>

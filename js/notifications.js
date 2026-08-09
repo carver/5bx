@@ -147,7 +147,7 @@ async function syncTriggeredNotification(registration, settings, enabled) {
       tag: PERIODIC_TAG,
       body: '11 minutes. Five exercises.',
       icon: './icons/icon-192.png',
-      badge: './icons/icon-192.png',
+      badge: './icons/icon-badge-96.png',
       showTrigger: new TimestampTrigger(
         nextOccurrence(settings.reminderTime).getTime()),
     });
@@ -169,7 +169,7 @@ function schedulePageTimeout(registration, settings) {
       await registration.showNotification('Time for your 5BX', {
         body: '11 minutes. Five exercises.',
         icon: './icons/icon-192.png',
-        badge: './icons/icon-192.png',
+        badge: './icons/icon-badge-96.png',
         tag: '5bx-reminder-fired',
       });
       await writeReminderKV({ ...kv, lastNotified: key });
@@ -185,7 +185,7 @@ export async function sendTestNotification() {
   await registration.showNotification('5BX reminder test', {
     body: 'This is what your daily reminder will look like.',
     icon: './icons/icon-192.png',
-    badge: './icons/icon-192.png',
+    badge: './icons/icon-badge-96.png',
     tag: '5bx-test',
   });
   return true;
