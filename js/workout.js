@@ -244,6 +244,15 @@ export function renderWorkout(root, { onExit }) {
 
     const i = session.index;
     const exercise = chart.exercises[i];
+    // Interval exercises (the stationary run) end on a partial-size final
+    // set, so the yes/no question also needs that count alongside the total.
+    const pace = exercise.interval
+      ? createPace({
+          targetSteps: targets[i],
+          totalSeconds: TIMING_SECONDS[i],
+          interval: exercise.interval,
+        })
+      : null;
 
     mount(root,
       header(i),
@@ -253,6 +262,8 @@ export function renderWorkout(root, { onExit }) {
         el('p.question', {}, 'Did you complete the target?'),
         el('p.target', {},
           el('strong', {}, String(targets[i])), ` ${exercise.unit}`),
+        pace ? el('p.note-aside', {},
+          `Final set: ${pace.finalSetSteps} ${exercise.unit}`) : null,
       ),
       // Wide gap between Yes and No: a shaky tap must not flip the answer.
       el('div.actions.actions-answer',
