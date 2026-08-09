@@ -477,6 +477,33 @@ h1, h2 { margin: 0; line-height: 1.25; }
   accent-color: var(--accent);
 }
 
+/* --------------------------------------------------------- update banner */
+
+.update-banner {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px max(12px, env(safe-area-inset-bottom));
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.16);
+}
+
+.update-banner-text { font-size: 0.95rem; font-weight: 600; }
+
+.update-banner-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 /* ------------------------------------------------------------ reduced UI */
 
 @media (prefers-reduced-motion: reduce) {

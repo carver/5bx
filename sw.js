@@ -10,7 +10,7 @@
  * visitors keep getting the old cached copy.
  */
 
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const SHELL_CACHE = `5bx-shell-${CACHE_VERSION}`;
 
 /* Cache used as a key/value store shared with the page (reminder settings). */
@@ -34,6 +34,7 @@ const SHELL_FILES = [
   './js/history.js',
   './js/settings.js',
   './js/notifications.js',
+  './js/update.js',
   './icons/icon.svg',
   './icons/icon-192.png',
   './icons/icon-512.png',

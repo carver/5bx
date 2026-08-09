@@ -11,7 +11,7 @@
  * its own process, so it cannot leak into the other suites.
  */
 
-import { test, describe, before } from 'node:test';
+import { test, describe, before, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
@@ -34,7 +34,7 @@ const skip = JSDOM ? false : 'jsdom is not installed — run `npm install`';
 describe('DOM', { skip }, () => {
   let window; let root; let cfg; let store;
   let renderHome; let renderWorkout; let renderHistory; let renderSettings;
-  let notify;
+  let notify; let update;
 
   const buttons = () => [...root.querySelectorAll('button')];
   const button = (re) => buttons().find((b) => re.test(b.textContent));
@@ -60,6 +60,7 @@ describe('DOM', { skip }, () => {
     ({ renderHistory } = await import('../js/history.js'));
     ({ renderSettings } = await import('../js/settings.js'));
     notify = await import('../js/notifications.js');
+    update = await import('../js/update.js');
 
     window.addEventListener('error', (event) => {
       assert.fail(`uncaught error in app code: ${event.message}`);
@@ -345,6 +346,73 @@ describe('DOM', { skip }, () => {
 
     test('syncing survives a missing service worker', async () => {
       await notify.syncReminder(store.getSettings());
+    });
+  });
+
+  /* --------------------------------------------------------- update banner */
+
+  describe('update banner', () => {
+    /** A minimal stand-in for navigator.serviceWorker: just an EventTarget
+     *  with a `controller` field, which is all watchForUpdate() reads. */
+    function fakeServiceWorkerContainer(controller) {
+      const target = new window.EventTarget();
+      target.controller = controller;
+      return target;
+    }
+
+    function installFakeServiceWorker(controller) {
+      const fake = fakeServiceWorkerContainer(controller);
+      Object.defineProperty(window.navigator, 'serviceWorker', {
+        value: fake, configurable: true,
+      });
+      return fake;
+    }
+
+    // The preceding "exercise 5 pacing" suite leaves a run's countdown mid-
+    // flight without ever reaching its checkpoint, so keepAwake can still be
+    // 'true' on entry here — reset it before every test, not just after,
+    // rather than depending on suite ordering.
+    beforeEach(() => {
+      document.body.dataset.keepAwake = 'false';
+    });
+
+    afterEach(() => {
+      document.body.querySelectorAll('.update-banner')
+        .forEach((b) => b.remove());
+    });
+
+    test('shows once a new worker takes over a page that was already controlled', () => {
+      const fake = installFakeServiceWorker({ /* had a controller at load */ });
+      update.watchForUpdate({ update: async () => {} });
+      fake.dispatchEvent(new window.Event('controllerchange'));
+      assert.ok(document.body.querySelector('.update-banner'),
+        'expected an update banner after controllerchange');
+    });
+
+    test('does not show for the very first install (no prior controller)', () => {
+      const fake = installFakeServiceWorker(null);
+      update.watchForUpdate({ update: async () => {} });
+      fake.dispatchEvent(new window.Event('controllerchange'));
+      assert.equal(document.body.querySelector('.update-banner'), null,
+        'the first-ever activation is not an update — must stay silent');
+    });
+
+    test('does not interrupt an in-progress exercise', () => {
+      document.body.dataset.keepAwake = 'true';
+      const fake = installFakeServiceWorker({});
+      update.watchForUpdate({ update: async () => {} });
+      fake.dispatchEvent(new window.Event('controllerchange'));
+      assert.equal(document.body.querySelector('.update-banner'), null,
+        'must not show a tap target next to exercise controls mid-workout');
+    });
+
+    test('Reload and Not now are both present and only one is a reload', () => {
+      const fake = installFakeServiceWorker({});
+      update.watchForUpdate({ update: async () => {} });
+      fake.dispatchEvent(new window.Event('controllerchange'));
+      const buttons = [...document.querySelectorAll('.update-banner button')]
+        .map((b) => b.textContent);
+      assert.deepEqual(buttons.sort(), ['Not now', 'Reload']);
     });
   });
 });

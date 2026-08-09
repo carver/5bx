@@ -6,6 +6,7 @@ import { renderWorkout } from './workout.js';
 import { renderHistory } from './history.js';
 import { renderSettings } from './settings.js';
 import { syncReminder } from './notifications.js';
+import { watchForUpdate } from './update.js';
 
 const root = document.getElementById('app');
 let teardown = null;
@@ -56,6 +57,7 @@ window.matchMedia('(prefers-color-scheme: dark)')
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js')
+      .then((registration) => watchForUpdate(registration))
       .catch((err) => console.warn('5BX: service worker registration failed.', err));
   });
 }
