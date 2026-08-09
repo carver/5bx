@@ -54,9 +54,10 @@ leg raise.
   explicit "did you hit the target?" checkpoint before moving on.
 - **Audible + haptic cues** at the end of each exercise, synthesised with
   WebAudio so there are no sound files to download.
-- **Exercise 5 interval cues** — the "every 75 steps, do 10 *X*" break is cued
-  from the clock, so you don't have to watch the screen or tap a counter while
-  running in place. Two live readouts:
+- **Live pacing estimate on every exercise** — a running "~N of target" count
+  during the exercise, so you always know roughly where you should be without
+  having to count reps in your head while your hands are shaking. Exercise 5
+  (the stationary run) gets two readouts:
 
   ```
   ~317 of 400 steps        running total for the exercise
@@ -65,18 +66,23 @@ leg raise.
 
   The per-set line matches counting 1–75 in your head and starting over. The
   last set is the remainder, not a full 75 (400 steps = 75×5 + 25, so 6 sets
-  and 5 breaks — there is no break after the final step).
+  and 5 breaks — there is no break after the final step). That final-set size
+  is also shown on the "did you complete the target?" checkpoint, alongside
+  the 400-step total.
 
-  Both readouts **freeze** during a jump block, since you aren't taking steps.
-  Because those blocks come out of the same 6 minutes, the running cadence is
-  scaled up so the estimate still lands exactly on the target at 6:00. Tune the
-  assumed block duration with `CONFIG.intervalMovementSeconds`.
+  Both exercise-5 readouts **freeze** during a jump block, since you aren't
+  taking steps. Because those blocks come out of the same 6 minutes, the
+  running cadence is scaled up so the estimate still lands exactly on the
+  target at 6:00. Tune the assumed block duration with
+  `CONFIG.intervalMovementSeconds`.
 - **Progression** — a level is only offered when a session hit *every* target
   **and** you have logged sessions on enough distinct days at that level.
 - **History** — day-at-level progress, streak, a 9-week calendar, and a step
-  chart of your movement through the levels.
-- **Installable PWA** with an offline app shell and a configurable daily
-  reminder.
+  chart of your movement through the levels, scaled to the highest level
+  you've actually reached so early progress doesn't read as a flat line.
+- **Installable PWA** with an offline app shell, a configurable daily
+  reminder, and a banner that offers a reload when a newer version has
+  deployed (never mid-exercise — see `js/update.js`).
 - **Dark mode** from `prefers-color-scheme`, with a manual override in Settings.
 - **Large hit targets** throughout (≥48px, 68px+ for primary actions) with wide
   spacing between adjacent controls.
@@ -131,7 +137,7 @@ ES modules don't load over `file://`, so use the server rather than opening
 
 ### Tests
 
-235 tests on Node's built-in runner (`node:test`) — no test framework.
+242 tests on Node's built-in runner (`node:test`) — no test framework.
 
 ```
 test/config.test.js   chart data, rep tables vs the printed source, age table
@@ -142,7 +148,7 @@ test/dom.test.js      renders every view, drives a full workout (needs jsdom)
 ```
 
 `npm test` works **on a bare checkout with nothing installed** — the DOM suite
-skips itself and the other ~208 tests still run. Run `npm install` to enable it.
+skips itself and the other ~211 tests still run. Run `npm install` to enable it.
 
 `jsdom` is the only dependency in the repo, it's dev-only, and the app itself
 ships zero runtime dependencies — there's a test enforcing that. `package.json`
@@ -232,13 +238,15 @@ js/
   history.js        progress & history
   settings.js       settings
   notifications.js  daily reminder scheduling
-  pace.js           exercise 5 step pacing / jump-block schedule
+  update.js         detects a newer deployed version, offers a reload
+  pace.js           live rep/step pacing estimate for every exercise
   timer.js          wall-clock countdown, screen wake lock
   audio.js          WebAudio cue tones
   ui.js             small DOM helpers
 test/               node:test suites (dev only)
 tools/
-  verify-config.mjs dev-only config sanity check (not served)
+  verify-config.mjs      dev-only config sanity check (not served)
+  generate-badge-icon.mjs dev-only: rasterizes icon-badge.svg (not served)
 .github/workflows/
   ci.yml            runs the suite on pull requests and pushes to main
 ```
