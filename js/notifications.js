@@ -24,6 +24,8 @@
  * key/value store holding a single JSON blob.
  */
 
+import { todayKey } from './state.js';
+
 const KV_CACHE = '5bx-kv';
 const KV_KEY = new URL('reminder-settings.json', document.baseURI).href;
 const PERIODIC_TAG = '5bx-daily-reminder';
@@ -157,15 +159,20 @@ function schedulePageTimeout(registration, settings) {
   const delay = due.getTime() - Date.now();
   pageTimer = setTimeout(async () => {
     const kv = await readReminderKV();
-    const todayKey = due.toISOString().slice(0, 10);
-    if (kv?.enabled && kv.lastNotified !== todayKey) {
+    // Must be the local calendar day, not UTC — this key is shared with
+    // sw.js's periodicsync handler, which dedupes on the local date. A UTC
+    // date here would drift from the local one for part of the day in most
+    // timezones, and the two mechanisms would disagree about whether
+    // today's reminder already fired, producing a second notification.
+    const key = todayKey(due);
+    if (kv?.enabled && kv.lastNotified !== key) {
       await registration.showNotification('Time for your 5BX', {
         body: '11 minutes. Five exercises.',
         icon: './icons/icon-192.png',
         badge: './icons/icon-192.png',
         tag: '5bx-reminder-fired',
       });
-      await writeReminderKV({ ...kv, lastNotified: todayKey });
+      await writeReminderKV({ ...kv, lastNotified: key });
     }
     schedulePageTimeout(registration, settings); // roll to tomorrow
   }, delay);

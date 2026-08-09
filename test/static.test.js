@@ -54,6 +54,23 @@ describe('service worker app shell', () => {
   });
 });
 
+describe('reminder date keys', () => {
+  // js/notifications.js's in-page timer and sw.js's periodicsync handler
+  // both dedupe "did today's reminder already fire?" against the same
+  // shared KV entry, so they MUST agree on what "today" means. sw.js can
+  // only use its own local-date helper (a service worker has no page module
+  // graph to import from), so js/notifications.js has to match it by hand —
+  // toISOString() gives the UTC date, which drifts from the local one for
+  // part of the day in most timezones and silently reintroduces a duplicate
+  // evening notification.
+  test('the page-timer dedup key is not UTC-derived', () => {
+    const notifSource = read('js/notifications.js');
+    assert.doesNotMatch(notifSource, /toISOString\(\)\.slice\(0,\s*10\)/,
+      'a UTC-based date key here will disagree with sw.js\'s local-date key ' +
+      '(see localDateKey in sw.js) for part of the day in most timezones');
+  });
+});
+
 describe('relative paths', () => {
   const sourceFiles = [
     'index.html', 'styles.css', 'sw.js', 'manifest.json',
