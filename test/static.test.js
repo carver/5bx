@@ -48,6 +48,33 @@ describe('service worker app shell', () => {
     assert.match(swSource, /const CACHE_VERSION = '[^']+'/);
   });
 
+  /*
+   * The one that actually bites. Everything below the navigation handler is
+   * served cache-first out of `5bx-shell-${CACHE_VERSION}`, and the browser
+   * only installs a new worker when sw.js changes byte-for-byte. Ship a change
+   * to any other file without moving the version and returning visitors are
+   * pinned to the old code permanently: reloading, pull-to-refresh and the
+   * update banner are all powerless, because from the browser's side nothing
+   * changed. It looks exactly like a healthy deploy. Hence: derive the version
+   * from the content and fail here when the committed stamp is stale.
+   */
+  test('the version stamp matches the shipped files', async () => {
+    const { contentHash, committedVersion, hashOf } =
+      await import('../tools/stamp-version.mjs');
+    const committed = committedVersion();
+    assert.ok(committed, 'js/version.js has no APP_VERSION — run `npm run stamp`');
+    assert.equal(hashOf(committed), contentHash(),
+      'a shipped file changed without re-stamping — run `npm run stamp`. ' +
+      'Without it the service worker keeps serving the old cached copy.');
+  });
+
+  test('the cache version and the app version are the same string', async () => {
+    const { committedVersion } = await import('../tools/stamp-version.mjs');
+    assert.match(swSource,
+      new RegExp(`const CACHE_VERSION = '${committedVersion()}';`),
+      'sw.js and js/version.js disagree — run `npm run stamp`');
+  });
+
   test('the KV cache is not swept by the shell cleanup', () => {
     // Deleting it on activate would wipe the reminder settings on every deploy.
     assert.match(swSource, /startsWith\('5bx-shell-'\)/);

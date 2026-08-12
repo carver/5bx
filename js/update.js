@@ -57,6 +57,43 @@ export function watchForUpdate(registration) {
   handle.unref?.();
 }
 
+/**
+ * Ask the browser to re-fetch sw.js right now, for the Settings button.
+ *
+ * The automatic paths above are deliberately unhurried (focus, hourly), so
+ * this exists for "I just deployed something, is it here yet?" — and as the
+ * escape hatch when a reload alone can't help, which is the normal case: a
+ * cache-first shell keeps serving the old files until a *new worker* installs,
+ * so pull-to-refresh cannot pick up a deploy on its own.
+ *
+ * @returns {Promise<'updated'|'current'|'offline'|'unsupported'>}
+ */
+export async function checkForUpdate() {
+  if (typeof navigator.serviceWorker?.getRegistration !== 'function') {
+    return 'unsupported';
+  }
+  const registration = await navigator.serviceWorker.getRegistration();
+  // No registration yet (first load, or a browser that refused to install one)
+  // means nothing is caching anything, so a plain reload is already enough.
+  if (!registration) return 'unsupported';
+
+  // A worker found by an earlier check may already be installing or waiting,
+  // in which case update() has nothing new to report but there IS an update.
+  let found = !!(registration.installing || registration.waiting);
+  const onFound = () => { found = true; };
+  registration.addEventListener('updatefound', onFound);
+  try {
+    // Resolves once any newly-found worker has finished installing, so `found`
+    // is settled by the time we read it.
+    await registration.update();
+  } catch {
+    return 'offline';
+  } finally {
+    registration.removeEventListener('updatefound', onFound);
+  }
+  return found ? 'updated' : 'current';
+}
+
 function presentWhenSafe() {
   const tick = () => {
     if (document.body.dataset.keepAwake === 'true') {

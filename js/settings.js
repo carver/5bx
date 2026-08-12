@@ -4,6 +4,8 @@ import { CHARTS, LEVELS, minDaysForAge, DECONDITIONING } from './config.js';
 import * as store from './state.js';
 import { el, mount, plural } from './ui.js';
 import * as notify from './notifications.js';
+import { checkForUpdate } from './update.js';
+import { APP_VERSION } from './version.js';
 
 export function renderSettings(root, { onNav, applyTheme }) {
   const rerender = () => renderSettings(root, { onNav, applyTheme });
@@ -80,6 +82,9 @@ export function renderSettings(root, { onNav, applyTheme }) {
 
     /* -------------------------------------------------------------- data */
     dataSection(rerender),
+
+    /* ------------------------------------------------------------ version */
+    versionSection(),
 
     el('nav.nav',
       {},
@@ -241,6 +246,63 @@ function dataSection(rerender) {
         }
       },
     }, 'Reset everything'),
+  );
+}
+
+/*
+ * Which version am I running, and can I have the new one now?
+ *
+ * An installed PWA gives you no address bar and no visible reload, and the
+ * shell is served cache-first, so "reload the page" genuinely cannot fetch a
+ * new deploy — only a new service worker installing can. This section is the
+ * manual lever for that, and the version string is what makes the answer
+ * checkable: compare it against the version shown by the deploy you expect.
+ */
+function versionSection() {
+  const status = el('p.help', {}, '');
+  const actions = el('div.actions-row', {});
+
+  const check = el('button.btn.btn-secondary', {
+    type: 'button',
+    onclick: async () => {
+      check.disabled = true;
+      status.textContent = 'Checking…';
+      const result = await checkForUpdate();
+      check.disabled = false;
+
+      if (result === 'updated') {
+        // The new worker has installed and claimed this page, but this tab's
+        // JS is still the old code in memory — only a reload swaps it in.
+        status.textContent = 'A new version is ready to install.';
+        if (!actions.contains(reload)) actions.append(reload);
+        return;
+      }
+      status.textContent = {
+        current: 'You are on the latest version.',
+        offline: 'Could not check — you may be offline.',
+        unsupported: 'This browser cannot check for updates automatically. ' +
+          'Reload the page to pick up a new version.',
+      }[result];
+    },
+  }, 'Check for updates');
+
+  const reload = el('button.btn.btn-primary', {
+    type: 'button',
+    onclick: () => window.location.reload(),
+  }, 'Reload now');
+
+  actions.append(check);
+
+  return el('section.card',
+    {},
+    el('h2.section-title', {}, 'Version'),
+    el('p.version', {}, APP_VERSION),
+    el('p.help', {},
+      'The app updates itself in the background, but an installed PWA can ' +
+      'hold onto the old version for a while. Check here to pull a new one ' +
+      'immediately.'),
+    actions,
+    status,
   );
 }
 

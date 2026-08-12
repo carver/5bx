@@ -6,11 +6,14 @@
  * https://username.github.io/5bx/. Relative URLs inside a service worker
  * resolve against the worker script's own URL, which is the app directory.
  *
- * BUMP CACHE_VERSION whenever you change any shell file, otherwise returning
- * visitors keep getting the old cached copy.
+ * CACHE_VERSION is generated — run `npm run stamp` after changing any shipped
+ * file. It must change whenever a shell file does: the browser only installs a
+ * new worker when sw.js differs byte-for-byte, and everything below is served
+ * cache-first, so a stale version pins returning visitors to the old code no
+ * matter how often they reload. test/static.test.js enforces this.
  */
 
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = '2026.08.12-8213b1a8';
 const SHELL_CACHE = `5bx-shell-${CACHE_VERSION}`;
 
 /* Cache used as a key/value store shared with the page (reminder settings). */
@@ -35,6 +38,7 @@ const SHELL_FILES = [
   './js/settings.js',
   './js/notifications.js',
   './js/update.js',
+  './js/version.js',
   './icons/icon.svg',
   './icons/icon-192.png',
   './icons/icon-512.png',

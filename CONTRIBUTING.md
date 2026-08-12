@@ -17,8 +17,9 @@ in the repo is exactly what the browser gets. Two consequences:
 ## Running things
 
 ```sh
-npm test            # full suite (242 tests)
+npm test            # full suite (246 tests)
 npm run verify      # quick sanity check on js/config.js
+npm run stamp       # re-stamp the app version after changing a shipped file
 npm run serve       # static server on http://localhost:8000
 ```
 
@@ -37,8 +38,16 @@ opening `index.html` directly.
 2. **Added or renamed a file under `js/` or `icons/`?** Add it to `SHELL_FILES`
    in `sw.js`, or the app breaks offline while still working in dev. There's a
    test for this.
-3. **Changed any shipped file?** Bump `CACHE_VERSION` in `sw.js` so returning
-   visitors don't get served a stale cached copy.
+3. **Changed any shipped file?** Run `npm run stamp`. It derives a version from
+   the contents of everything the service worker caches and writes it into both
+   `js/version.js` (shown in Settings → Version) and `CACHE_VERSION` in `sw.js`.
+
+   This is not bookkeeping. The shell is served cache-first, and a browser only
+   installs a new worker when `sw.js` differs byte-for-byte — so shipping a
+   change without moving the version pins returning visitors to the old code
+   *permanently*. Reloading, pull-to-refresh and the update banner are all
+   powerless against it, and the deploy looks perfectly healthy from the
+   outside. `npm test` fails when the stamp is stale, so CI catches a miss.
 
 ## Test layout
 

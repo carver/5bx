@@ -170,6 +170,34 @@ describe('DOM', { skip }, () => {
       assert.match(text(), /Age 30 → 4 days/);
     });
 
+    test('shows the app version and can check for an update', async () => {
+      const { APP_VERSION } = await import('../js/version.js');
+      assert.match(text(), new RegExp(APP_VERSION.replace(/\./g, '\\.')));
+
+      /* A registration whose update() finds nothing new. */
+      const listeners = new Set();
+      const registration = {
+        addEventListener: (_type, fn) => listeners.add(fn),
+        removeEventListener: (_type, fn) => listeners.delete(fn),
+        update: async () => {},
+      };
+      window.navigator.serviceWorker.getRegistration = async () => registration;
+
+      button(/Check for updates/).click();
+      await sleep(20);
+      assert.match(text(), /on the latest version/);
+      assert.ok(!button(/Reload now/), 'no reload offered when up to date');
+
+      /* Now one that does find a new worker. */
+      registration.update = async () => {
+        for (const fn of listeners) fn();
+      };
+      button(/Check for updates/).click();
+      await sleep(20);
+      assert.match(text(), /new version is ready/);
+      assert.ok(button(/Reload now/), 'a found update must offer a reload');
+    });
+
     test('offers chart, level and theme selects', () => {
       assert.ok(root.querySelectorAll('select').length >= 3);
     });

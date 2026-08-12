@@ -79,10 +79,14 @@ leg raise.
   **and** you have logged sessions on enough distinct days at that level.
 - **History** — day-at-level progress, streak, a 9-week calendar, and a step
   chart of your movement through the levels, scaled to the highest level
-  you've actually reached so early progress doesn't read as a flat line.
+  you've actually reached so early progress doesn't read as a flat line. The
+  chart's x axis is elapsed time, so each step is as wide as the time you
+  actually spent at that level.
 - **Installable PWA** with an offline app shell, a configurable daily
   reminder, and a banner that offers a reload when a newer version has
-  deployed (never mid-exercise — see `js/update.js`).
+  deployed (never mid-exercise — see `js/update.js`). Settings shows the
+  running version and a **Check for updates** button, since an installed PWA
+  has no address bar and a plain reload cannot fetch a new deploy on its own.
 - **Dark mode** from `prefers-color-scheme`, with a manual override in Settings.
 - **Large hit targets** throughout (≥48px, 68px+ for primary actions) with wide
   spacing between adjacent controls.
@@ -137,7 +141,7 @@ ES modules don't load over `file://`, so use the server rather than opening
 
 ### Tests
 
-242 tests on Node's built-in runner (`node:test`) — no test framework.
+246 tests on Node's built-in runner (`node:test`) — no test framework.
 
 ```
 test/config.test.js   chart data, rep tables vs the printed source, age table
@@ -239,6 +243,7 @@ js/
   settings.js       settings
   notifications.js  daily reminder scheduling
   update.js         detects a newer deployed version, offers a reload
+  version.js        generated app version (npm run stamp)
   pace.js           live rep/step pacing estimate for every exercise
   timer.js          wall-clock countdown, screen wake lock
   audio.js          WebAudio cue tones
@@ -246,6 +251,7 @@ js/
 test/               node:test suites (dev only)
 tools/
   verify-config.mjs      dev-only config sanity check (not served)
+  stamp-version.mjs      stamps the content-derived app + cache version
   generate-badge-icon.mjs dev-only: rasterizes icon-badge.svg (not served)
 .github/workflows/
   ci.yml            runs the suite on pull requests and pushes to main
