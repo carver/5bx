@@ -131,6 +131,32 @@ describe('DOM', { skip }, () => {
     test('handles an empty history', () => {
       assert.match(text(), /No sessions yet/);
     });
+
+    test('sparkline treads are as wide as the time spent at the level', () => {
+      // A level held for a minute, then one held for 6 of the last 8 days.
+      const day = 86_400_000;
+      const now = Date.now();
+      store.resetAll();
+      const log = store.getLevelLog();
+      log.length = 0;
+      log.push(
+        { ts: now - 8 * day, date: '', chartId: 1, levelIndex: 0, reason: 'start' },
+        { ts: now - 8 * day + 60_000, date: '', chartId: 1, levelIndex: 1, reason: 'manual' },
+        { ts: now - 2 * day, date: '', chartId: 1, levelIndex: 2, reason: 'advance' },
+      );
+      renderHistory(root, { onNav() {} });
+
+      // Each `H x` in the step path ends one tread; widths are the gaps.
+      const d = root.querySelector('svg.sparkline path').getAttribute('d');
+      const xs = [...d.matchAll(/[MH] ([\d.]+)/g)].map((m) => Number(m[1]));
+      const treads = xs.slice(1).map((x, i) => x - xs[i]);
+      const total = treads.reduce((a, b) => a + b, 0);
+
+      assert.ok(treads[0] < 1, `skipped level should be a sliver, got ${treads[0]}`);
+      // 6 of 8 days, then 2 of 8 — within a pixel of the true proportions.
+      assert.ok(Math.abs(treads[1] / total - 6 / 8) < 0.01, `got ${treads[1]}`);
+      assert.ok(Math.abs(treads[2] / total - 2 / 8) < 0.01, `got ${treads[2]}`);
+    });
   });
 
   describe('settings', () => {

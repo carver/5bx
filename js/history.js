@@ -105,8 +105,14 @@ function calendar(sessions) {
  * whole 72-level program, but the scale tops out at the highest level you've
  * actually reached (rather than the fixed 72-level ceiling) so early progress
  * isn't squashed flat at the bottom of the chart.
+ *
+ * The x axis is *time*, not the entry index, so each tread is as wide as the
+ * time actually spent at that level: a level you skipped past in a minute is a
+ * sliver, and the level you're on now grows every day you stay on it. The axis
+ * runs from the first log entry to now, so the final tread always reaches the
+ * right edge.
  */
-function sparkline(levelLog) {
+function sparkline(levelLog, now = Date.now()) {
   const W = 300;
   const H = 64;
   const PAD = 4;
@@ -114,13 +120,20 @@ function sparkline(levelLog) {
     absoluteLevel(entry.chartId, entry.levelIndex));
   const maxLevel = Math.max(1, ...values);
 
-  const points = levelLog.map((entry, i) => {
-    const x = levelLog.length === 1
-      ? W / 2
-      : PAD + (i / (levelLog.length - 1)) * (W - PAD * 2);
-    const y = H - PAD - (values[i] / maxLevel) * (H - PAD * 2);
-    return [x, y];
-  });
+  const t0 = levelLog[0].ts;
+  // Clamp: a clock change (or an import) could leave `now` behind the log.
+  const tEnd = Math.max(now, levelLog[levelLog.length - 1].ts);
+  const span = tEnd - t0;
+  // Everything at one instant (a single entry, or a fresh import) has no time
+  // spread to scale — fall back to even spacing so the shape is still legible.
+  const xAt = (ts, i) => (span > 0
+    ? PAD + (Math.min(Math.max(ts, t0), tEnd) - t0) / span * (W - PAD * 2)
+    : PAD + (levelLog.length === 1 ? 0 : i / (levelLog.length - 1)) * (W - PAD * 2));
+
+  const points = levelLog.map((entry, i) => [
+    xAt(entry.ts, i),
+    H - PAD - (values[i] / maxLevel) * (H - PAD * 2),
+  ]);
 
   // Step path — level changes are discrete events, not a smooth ramp.
   let d = `M ${points[0][0].toFixed(1)} ${points[0][1].toFixed(1)}`;
