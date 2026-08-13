@@ -289,6 +289,46 @@ describe('DOM', { skip }, () => {
       assert.equal(store.getSessions().at(-1).completed, false);
       assert.equal(store.daysAtLevel(), 1, 'a partial day still counts');
     });
+
+    test('guards leaving the same way for back and for Quit', async () => {
+      /* The router asks confirmLeave() before letting anything — an Android
+       * back press included — take the workout off screen. */
+      const realConfirm = window.confirm;
+      let asked = 0;
+      const answerConfirm = (answer) => {
+        window.confirm = () => { asked += 1; return answer; };
+        globalThis.confirm = window.confirm;
+      };
+
+      try {
+        store.resetAll();
+        store.getProgress().levelStartedTs = Date.now();
+        const view = renderWorkout(root, { onExit() {} });
+
+        answerConfirm(false);
+        assert.equal(view.confirmLeave(), true,
+          'nothing is logged before the first exercise — leave silently');
+        assert.equal(asked, 0);
+
+        await doExercise(true);
+        assert.equal(view.confirmLeave(), false, 'a declined confirm keeps you here');
+        assert.equal(asked, 1, 'a session in progress must prompt');
+
+        answerConfirm(true);
+        assert.equal(view.confirmLeave(), true);
+        assert.equal(asked, 2);
+
+        for (let i = 1; i < 5; i += 1) await doExercise(true);
+        assert.match(text(), /Session complete/);
+        answerConfirm(false);
+        assert.equal(view.confirmLeave(), true,
+          'the summary is already logged — back must not offer to discard it');
+        assert.equal(asked, 2, 'no prompt once the session is logged');
+      } finally {
+        window.confirm = realConfirm;
+        globalThis.confirm = realConfirm;
+      }
+    });
   });
 
   /* --------------------------------------------------- exercise 5 pacing */

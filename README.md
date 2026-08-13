@@ -87,6 +87,10 @@ leg raise.
   deployed (never mid-exercise — see `js/update.js`). Settings shows the
   running version and a **Check for updates** button, since an installed PWA
   has no address bar and a plain reload cannot fetch a new deploy on its own.
+- **Back button navigation** — every screen past Home gets its own history
+  entry, so Android's hardware back button walks back through the app instead
+  of minimising it. Back out of a half-finished workout and you get the same
+  confirm as the on-screen **Quit workout** button.
 - **Dark mode** from `prefers-color-scheme`, with a manual override in Settings.
 - **Large hit targets** throughout (≥48px, 68px+ for primary actions) with wide
   spacing between adjacent controls.
@@ -141,7 +145,7 @@ ES modules don't load over `file://`, so use the server rather than opening
 
 ### Tests
 
-246 tests on Node's built-in runner (`node:test`) — no test framework.
+253 tests on Node's built-in runner (`node:test`) — no test framework.
 
 ```
 test/config.test.js   chart data, rep tables vs the printed source, age table
@@ -149,10 +153,13 @@ test/state.test.js    days-at-level, the advance gate, streaks, persistence
 test/pace.test.js     exercise 5 pacing, jump blocks, per-set counter
 test/static.test.js   service worker cache list, manifest, relative paths
 test/dom.test.js      renders every view, drives a full workout (needs jsdom)
+test/router.test.js   view switching and the back button (needs jsdom)
+test/app.test.js      the booted app, driven by taps and back (needs jsdom)
 ```
 
-`npm test` works **on a bare checkout with nothing installed** — the DOM suite
-skips itself and the other ~211 tests still run. Run `npm install` to enable it.
+`npm test` works **on a bare checkout with nothing installed** — the three DOM
+suites skip themselves and the other ~213 tests still run. Run `npm install` to
+enable them.
 
 `jsdom` is the only dependency in the repo, it's dev-only, and the app itself
 ships zero runtime dependencies — there's a test enforcing that. `package.json`
@@ -236,7 +243,8 @@ icons/              icon.svg plus the minimum PNGs for installability
 js/
   config.js         ALL workout data — the only file you need to edit
   state.js          localStorage persistence, progression rules
-  app.js            entry point, routing, theme, SW registration
+  app.js            entry point, theme, SW registration
+  router.js         which view is showing; back-button history
   workout.js        guided workout mode
   home.js           dashboard
   history.js        progress & history

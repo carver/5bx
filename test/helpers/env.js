@@ -88,3 +88,28 @@ export function installDom(JSDOM, html) {
 }
 
 export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Wait until `predicate()` holds, then return.
+ *
+ * History navigation is asynchronous — jsdom fires popstate on a later task,
+ * exactly as a browser does. Test files run in parallel processes, so a fixed
+ * sleep long enough on an idle machine can be too short on a busy one; wait
+ * for the state you actually care about instead.
+ *
+ * @param {Function} predicate
+ * @param {string} what described in the timeout message
+ */
+export async function until(predicate, what, timeoutMs = 2000) {
+  const deadline = Date.now() + timeoutMs;
+  while (!predicate()) {
+    if (Date.now() > deadline) throw new Error(`timed out waiting for ${what}`);
+    await sleep(5);
+  }
+}
+
+/**
+ * Let anything queued run, for asserting that nothing happened. A fixed wait
+ * is unavoidable here — there is no event to wait for — so it is generous.
+ */
+export const quiet = () => sleep(100);

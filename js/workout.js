@@ -29,6 +29,7 @@ export function renderWorkout(root, { onExit }) {
     results: [],        // yes/no answers so far
   };
   let timer = null;
+  let leaving = false;   // the workout has already decided to exit
 
   function cleanup() {
     timer?.stop();
@@ -38,8 +39,24 @@ export function renderWorkout(root, { onExit }) {
   }
 
   function exit() {
+    leaving = true;
     cleanup();
     onExit();
+  }
+
+  /*
+   * May the workout be taken off screen right now? Asked by the on-screen
+   * "Quit workout" button and by the router when the hardware back button is
+   * pressed, so both routes out are equally hard to hit by accident.
+   *
+   * Nothing is at stake before the first exercise is answered, and by the
+   * summary the session is already logged — only in between is there anything
+   * to lose.
+   */
+  function confirmLeave() {
+    if (leaving || session.index === 0 ||
+        session.index >= chart.exercises.length) return true;
+    return confirm('Quit this workout? Nothing will be logged.');
   }
 
   /* ---------------------------------------------------------------- ready */
@@ -393,12 +410,9 @@ export function renderWorkout(root, { onExit }) {
   }
 
   function confirmQuit() {
-    if (session.index === 0 ||
-        confirm('Quit this workout? Nothing will be logged.')) {
-      exit();
-    }
+    if (confirmLeave()) exit();
   }
 
   renderReady();
-  return cleanup;
+  return { teardown: cleanup, confirmLeave };
 }

@@ -7,25 +7,20 @@ import { renderHistory } from './history.js';
 import { renderSettings } from './settings.js';
 import { syncReminder } from './notifications.js';
 import { watchForUpdate } from './update.js';
+import { createRouter } from './router.js';
 
 const root = document.getElementById('app');
-let teardown = null;
 
-const views = {
-  home: () => renderHome(root, { onStart: () => go('workout'), onNav: go }),
-  workout: () => renderWorkout(root, { onExit: () => go('home') }),
-  history: () => renderHistory(root, { onNav: go }),
-  settings: () => renderSettings(root, { onNav: go, applyTheme }),
-};
-
-function go(name) {
-  teardown?.();
-  teardown = null;
-  window.scrollTo(0, 0);
-  document.body.dataset.view = name;
-  // Views render synchronously; renderWorkout returns its own cleanup.
-  teardown = views[name]() || null;
-}
+// Views render synchronously; renderWorkout returns its own cleanup and the
+// confirm that guards quitting a session part-way through.
+const { go, start } = createRouter({
+  views: {
+    home: () => renderHome(root, { onStart: () => go('workout'), onNav: go }),
+    workout: () => renderWorkout(root, { onExit: () => go('home') }),
+    history: () => renderHistory(root, { onNav: go }),
+    settings: () => renderSettings(root, { onNav: go, applyTheme }),
+  },
+});
 
 /* ------------------------------------------------------------------ theme */
 
@@ -65,5 +60,5 @@ if ('serviceWorker' in navigator) {
 /* -------------------------------------------------------------------- boot */
 
 applyTheme();
-go('home');
+start();
 syncReminder(store.getSettings());

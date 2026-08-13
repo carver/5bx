@@ -12,20 +12,20 @@ in the repo is exactly what the browser gets. Two consequences:
   is also enforced by a test.
 
 `jsdom` is the single dependency, it is dev-only, and it is only used by
-`test/dom.test.js`.
+`test/dom.test.js`, `test/router.test.js` and `test/app.test.js`.
 
 ## Running things
 
 ```sh
-npm test            # full suite (246 tests)
+npm test            # full suite (253 tests)
 npm run verify      # quick sanity check on js/config.js
 npm run stamp       # re-stamp the app version after changing a shipped file
 npm run serve       # static server on http://localhost:8000
 ```
 
-`npm test` works on a bare checkout with nothing installed — the DOM suite
-skips itself if `jsdom` is missing and the other ~211 tests still run. Run
-`npm install` to get the DOM suite too.
+`npm test` works on a bare checkout with nothing installed — the three DOM
+suites skip themselves if `jsdom` is missing and the other ~213 tests still
+run. Run `npm install` to get them too.
 
 ES modules don't load over `file://`, so use `npm run serve` rather than
 opening `index.html` directly.
@@ -58,6 +58,8 @@ opening `index.html` directly.
 | `test/pace.test.js` | Exercise 5 pacing: jump-block schedule, step estimate, per-set counter |
 | `test/static.test.js` | Deployment integrity: service worker cache list, manifest, relative paths, no runtime deps |
 | `test/dom.test.js` | Renders every view and drives a full guided workout (needs `jsdom`) |
+| `test/router.test.js` | View switching and the back button, against stub views (needs `jsdom`) |
+| `test/app.test.js` | The booted app end to end, driven by taps and the back button (needs `jsdom`) |
 
 Tests use the built-in `node:test` runner — no framework. Each file runs in its
 own process, so a test that mutates module state (the DOM suite shrinks
