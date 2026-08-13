@@ -80,10 +80,10 @@ Worth knowing about two deliberate testing choices:
 
 `.github/workflows/ci.yml` runs on every pull request and every push to `main`:
 
-- **`Test (Node 20 / 22 / 24)`** — `npm ci`, then the full suite plus
+- **`Test (Node 22 / 24)`** — `npm ci`, then the full suite plus
   `npm run verify`. `REQUIRE_DOM_TESTS=1` is set so a broken install fails
   loudly instead of silently skipping the DOM tests.
 - **`Runs without dependencies`** — the suite with nothing installed, proving
   the app never picks up a runtime dependency by accident.
 
-All four checks must pass before a pull request can be merged.
+All three checks must pass before a pull request can be merged.
