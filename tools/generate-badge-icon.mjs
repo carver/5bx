@@ -6,12 +6,12 @@
  * icon) ignores color entirely and uses only the alpha channel: every opaque
  * pixel becomes a single OS-chosen flat color, every transparent pixel stays
  * background. icon-192.png is fully opaque edge-to-edge (a filled square, by
- * design — that's correct for the "any"-purpose app icon), so handing it to
+ * design, which is correct for the "any"-purpose app icon), so handing it to
  * `badge` makes the whole square opaque and it renders as a solid white
  * block. This generates a real silhouette instead: white glyph, transparent
  * everywhere else.
  *
- * Zero dependencies on purpose — this is a one-shot dev tool, not something
+ * Zero dependencies on purpose; this is a one-shot dev tool, not something
  * the app ships or runs. `node tools/generate-badge-icon.mjs`, then commit
  * the regenerated PNG if icon-badge.svg's geometry changes.
  */

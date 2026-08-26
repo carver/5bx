@@ -25,38 +25,38 @@ CDNs. Installable as a PWA and fully usable offline.
 ## The modification
 
 Exercise 2 (originally sit-ups) is replaced by the **bird dog** progression on
-charts 1–3:
+charts 1-3:
 
 | Chart | Exercise 2 |
 | ----- | ---------- |
-| 1 | Bird dog level 2a — arm reach only |
-| 2 | Bird dog level 2b — leg only (`extension` variant by default) |
-| 3 | Bird dog level 3 — combined opposite arm + leg |
-| 4–6 | *Unmodified* — still the original 5BX sit-up variants |
+| 1 | Bird dog level 2a (arm reach only) |
+| 2 | Bird dog level 2b, leg only (`extension` variant by default) |
+| 3 | Bird dog level 3, combined opposite arm + leg |
+| 4-6 | *Unmodified*, still the original 5BX sit-up variants |
 
 **The bird-dog rep counts are guesses.** They were seeded by copying the
 original sit-up rep column for the equivalent chart and level, on the reasoning
 that both are roughly a one-minute moderate-effort core movement. Expect to tune
-them — see *Editing the workout data* below.
+them; see *Editing the workout data* below.
 
-Charts 4–6 are flagged in `js/config.js` with a `birdDogTodo` marker and a
+Charts 4-6 are flagged in `js/config.js` with a `birdDogTodo` marker and a
 `TODO` comment, since no bird-dog variant is defined for them yet.
 
 **Rep counting convention:** for every alternating exercise (bird dogs and the
-original alternate leg raise), **1 rep = one full alternating cycle** — one
-side, then the other. This matches how the original plan counts its alternate
+original alternate leg raise), **1 rep = one full alternating cycle**, one
+side then the other. This matches how the original plan counts its alternate
 leg raise.
 
 ## Features
 
-- **Guided mode** — walks through the 5 exercises one at a time. Each gets its
+- **Guided mode.** Walks through the 5 exercises one at a time. Each gets its
   own instructions, target, timer (2:00 / 1:00 / 1:00 / 1:00 / 6:00), and an
   explicit "did you hit the target?" checkpoint before moving on.
 - **Audible + haptic cues** at the end of each exercise, synthesised with
   WebAudio so there are no sound files to download.
-- **Live pacing estimate on every exercise** — a running "~N of target" count
-  during the exercise, so you always know roughly where you should be without
-  having to count reps in your head while your hands are shaking. Exercise 5
+- **Live pacing estimate on every exercise.** A running "~N of target" count
+  during the exercise, so you know roughly where you should be without
+  counting reps in your head while your hands are shaking. Exercise 5
   (the stationary run) gets two readouts:
 
   ```
@@ -64,9 +64,9 @@ leg raise.
   ~17 of 75 · set 5 of 6   restarts at every break
   ```
 
-  The per-set line matches counting 1–75 in your head and starting over. The
+  The per-set line matches counting 1-75 in your head and starting over. The
   last set is the remainder, not a full 75 (400 steps = 75×5 + 25, so 6 sets
-  and 5 breaks — there is no break after the final step). That final-set size
+  and 5 breaks; there is no break after the final step). That final-set size
   is also shown on the "did you complete the target?" checkpoint, alongside
   the 400-step total.
 
@@ -75,19 +75,19 @@ leg raise.
   running cadence is scaled up so the estimate still lands exactly on the
   target at 6:00. Tune the assumed block duration with
   `CONFIG.intervalMovementSeconds`.
-- **Progression** — a level is only offered when a session hit *every* target
+- **Progression.** A level is only offered when a session hit *every* target
   **and** you have logged sessions on enough distinct days at that level.
-- **History** — day-at-level progress, streak, a 9-week calendar, and a step
+- **History.** Day-at-level progress, streak, a 9-week calendar, and a step
   chart of your movement through the levels, scaled to the highest level
   you've actually reached so early progress doesn't read as a flat line. The
   chart's x axis is elapsed time, so each step is as wide as the time you
   actually spent at that level.
 - **Installable PWA** with an offline app shell, a configurable daily
   reminder, and a banner that offers a reload when a newer version has
-  deployed (never mid-exercise — see `js/update.js`). Settings shows the
+  deployed (never mid-exercise; see `js/update.js`). Settings shows the
   running version and a **Check for updates** button, since an installed PWA
   has no address bar and a plain reload cannot fetch a new deploy on its own.
-- **Back button navigation** — every screen past Home gets its own history
+- **Back button navigation.** Every screen past Home gets its own history
   entry, so Android's hardware back button walks back through the app instead
   of minimising it. Back out of a half-finished workout and you get the same
   confirm as the on-screen **Quit workout** button.
@@ -120,7 +120,7 @@ npm run verify     # or: node tools/verify-config.mjs
 ```
 
 It checks the shape of every chart and, most usefully, that no rep target
-*decreases* as levels rise — which catches most transposition slips when
+*decreases* as levels rise, which catches most transposition slips when
 retuning a column. Sample failure output:
 
 ```
@@ -140,12 +140,12 @@ npm run verify     # quick check on js/config.js
 ```
 
 ES modules don't load over `file://`, so use the server rather than opening
-`index.html` directly. Service workers and notifications need a secure context —
+`index.html` directly. Service workers and notifications need a secure context;
 `localhost` counts, so no HTTPS setup is needed locally.
 
 ### Tests
 
-253 tests on Node's built-in runner (`node:test`) — no test framework.
+253 tests on Node's built-in runner (`node:test`), no test framework.
 
 ```
 test/config.test.js   chart data, rep tables vs the printed source, age table
@@ -157,12 +157,12 @@ test/router.test.js   view switching and the back button (needs jsdom)
 test/app.test.js      the booted app, driven by taps and back (needs jsdom)
 ```
 
-`npm test` works **on a bare checkout with nothing installed** — the three DOM
+`npm test` works **on a bare checkout with nothing installed**. The three DOM
 suites skip themselves and the other ~213 tests still run. Run `npm install` to
 enable them.
 
 `jsdom` is the only dependency in the repo, it's dev-only, and the app itself
-ships zero runtime dependencies — there's a test enforcing that. `package.json`
+ships zero runtime dependencies; a test enforces that. `package.json`
 exists so Node treats the files as ES modules and to hold the test scripts;
 nothing is bundled, transpiled, or built.
 
@@ -179,7 +179,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full layout and conventions.
 
 #### Requiring the checks before merge
 
-Workflows can't grant themselves this — it's a repo setting, and the checks must
+Workflows can't grant themselves this. It's a repo setting, and the checks must
 have run at least once before GitHub will list them:
 
 1. Push this repo and open one pull request so the checks appear.
@@ -206,7 +206,7 @@ python3 -m http.server 8000
 # then open http://localhost:8000
 ```
 
-Service workers and notifications require a secure context — `localhost`
+Service workers and notifications require a secure context; `localhost`
 counts, so local development works without HTTPS.
 
 ## Hosting on GitHub Pages
@@ -221,7 +221,7 @@ every asset reference is relative, so it works from a project subpath like
 4. Choose branch **`main`** and folder **`/ (root)`**, then **Save**.
 5. Wait ~1 minute, then open `https://<username>.github.io/<repo-name>/`.
 
-That's it — no build step and no workflow file needed.
+That's it. No build step and no workflow file needed.
 
 To serve from `/docs` instead, move every file into a `docs/` directory and
 pick **`/docs`** in step 4. Nothing else needs to change, because no path in
@@ -241,7 +241,7 @@ manifest.json       PWA manifest (relative start_url and scope)
 sw.js               offline app shell + reminder wake-ups
 icons/              icon.svg plus the minimum PNGs for installability
 js/
-  config.js         ALL workout data — the only file you need to edit
+  config.js         ALL workout data, the only file you need to edit
   state.js          localStorage persistence, progression rules
   app.js            entry point, theme, SW registration
   router.js         which view is showing; back-button history
@@ -266,7 +266,7 @@ tools/
 ```
 
 `package.json`, `test/`, `tools/`, and `.github/` are development conveniences
-and play no part in the deployed site — GitHub Pages just serves the static
+and play no part in the deployed site. GitHub Pages just serves the static
 files.
 
 ## Known limitation: reminder reliability
@@ -274,12 +274,12 @@ files.
 Android aggressively restricts background execution. The app schedules the
 daily reminder three ways, best-available first:
 
-1. **Notification Triggers** (`TimestampTrigger`) — genuinely OS-scheduled,
+1. **Notification Triggers** (`TimestampTrigger`): OS-scheduled,
    but only available behind a flag/origin trial in Chrome.
-2. **Periodic Background Sync** — the service worker gets woken roughly daily
+2. **Periodic Background Sync**: the service worker gets woken roughly daily
    for installed PWAs, at a cadence Chrome decides based on how often you use
    the app.
-3. **An in-page timer** — exact, but only while a tab is alive.
+3. **An in-page timer**: exact, but only while a tab is alive.
 
 If the browser stays fully closed for a long stretch and neither (1) nor (2) is
 available, the reminder can be late or skipped. That's a platform restriction,

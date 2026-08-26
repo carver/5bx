@@ -6,14 +6,14 @@
  * https://username.github.io/5bx/. Relative URLs inside a service worker
  * resolve against the worker script's own URL, which is the app directory.
  *
- * CACHE_VERSION is generated — run `npm run stamp` after changing any shipped
+ * CACHE_VERSION is generated; run `npm run stamp` after changing any shipped
  * file. It must change whenever a shell file does: the browser only installs a
  * new worker when sw.js differs byte-for-byte, and everything below is served
  * cache-first, so a stale version pins returning visitors to the old code no
  * matter how often they reload. test/static.test.js enforces this.
  */
 
-const CACHE_VERSION = '2026.08.13-b8a03186';
+const CACHE_VERSION = '2026.08.26-63f6b81f';
 const SHELL_CACHE = `5bx-shell-${CACHE_VERSION}`;
 
 /* Cache used as a key/value store shared with the page (reminder settings). */
@@ -62,7 +62,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const names = await caches.keys();
     await Promise.all(names
-      // Only sweep old shell caches — the KV cache must survive upgrades.
+      // Only sweep old shell caches; the KV cache must survive upgrades.
       .filter((name) => name.startsWith('5bx-shell-') && name !== SHELL_CACHE)
       .map((name) => caches.delete(name)));
     await self.clients.claim();
@@ -113,8 +113,8 @@ self.addEventListener('fetch', (event) => {
  * only, and it is deliberately conservative). We treat each wake-up as "check
  * whether today's reminder is due", rather than assuming it lands on time.
  *
- * If the browser never wakes us — because the app is not installed, or Android
- * has restricted background work — the reminder falls back to the in-page
+ * If the browser never wakes us, because the app is not installed or Android
+ * has restricted background work, the reminder falls back to the in-page
  * timer in js/notifications.js, which only runs while a tab is alive. There is
  * no way around this on the platform.
  */
@@ -163,7 +163,7 @@ async function maybeNotify() {
   const [hours, minutes] = String(kv.time || '07:00').split(':').map(Number);
   const dueToday = new Date(now);
   dueToday.setHours(hours, minutes, 0, 0);
-  if (now < dueToday) return; // not yet — a later wake-up will catch it
+  if (now < dueToday) return; // not yet; a later wake-up will catch it
 
   await self.registration.showNotification('Time for your 5BX', {
     body: '11 minutes. Five exercises.',

@@ -41,7 +41,7 @@ function vibrate(pattern) {
   navigator.vibrate?.(pattern);
 }
 
-/** Exercise time is up — deliberately hard to miss. */
+/** Exercise time is up. Deliberately hard to miss. */
 export function cueTimeUp() {
   [0, 0.28, 0.56].forEach((offset) => tone(880, offset, 0.22, 0.3));
   tone(660, 0.84, 0.5, 0.3);

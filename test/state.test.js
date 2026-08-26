@@ -101,7 +101,7 @@ describe('days at level', () => {
   test('sessions logged before arriving at the level do not count', () => {
     sessionDaysAgo(3);
     sessionDaysAgo(2);
-    arrivedDaysAgo(0); // arrive now — the older sessions belong to the past
+    arrivedDaysAgo(0); // arrive now; the older sessions belong to the past
     assert.equal(store.daysAtLevel(), 0);
   });
 });

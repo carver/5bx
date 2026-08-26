@@ -1,7 +1,7 @@
 /*
  * Countdown timer driven by the wall clock rather than by accumulated ticks,
  * so it stays accurate if the tab is backgrounded, the phone sleeps, or the
- * interval is throttled — on resume it simply recomputes from Date.now().
+ * interval is throttled; on resume it recomputes from Date.now().
  */
 
 export class Countdown {
@@ -63,7 +63,7 @@ export class Countdown {
     this._emit();
   }
 
-  /** Stop for good — used when the user ends an exercise early. */
+  /** Stop for good. Used when the user ends an exercise early. */
   stop() {
     clearInterval(this.handle);
     this.handle = null;
@@ -88,7 +88,7 @@ export class Countdown {
 }
 
 /*
- * Screen Wake Lock — keeps the phone awake during the 6-minute run so the
+ * Screen Wake Lock keeps the phone awake during the 6-minute run so the
  * screen doesn't lock mid-exercise. Not supported everywhere; every call is
  * best-effort and failures are ignored on purpose.
  */
@@ -99,7 +99,7 @@ export async function acquireWakeLock() {
   try {
     wakeLock = await navigator.wakeLock.request('screen');
     wakeLock.addEventListener('release', () => { wakeLock = null; });
-  } catch { /* denied or unsupported — harmless */ }
+  } catch { /* denied or unsupported; harmless */ }
 }
 
 export function releaseWakeLock() {

@@ -1,7 +1,7 @@
 /*
  * Shared test setup.
  *
- * The app itself has zero dependencies and never runs in Node — these helpers
+ * The app itself has zero dependencies and never runs in Node; these helpers
  * exist only so the browser modules can be imported and exercised by the test
  * runner.
  */
@@ -92,7 +92,7 @@ export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 /**
  * Wait until `predicate()` holds, then return.
  *
- * History navigation is asynchronous — jsdom fires popstate on a later task,
+ * History navigation is asynchronous; jsdom fires popstate on a later task,
  * exactly as a browser does. Test files run in parallel processes, so a fixed
  * sleep long enough on an idle machine can be too short on a busy one; wait
  * for the state you actually care about instead.
@@ -110,6 +110,6 @@ export async function until(predicate, what, timeoutMs = 2000) {
 
 /**
  * Let anything queued run, for asserting that nothing happened. A fixed wait
- * is unavoidable here — there is no event to wait for — so it is generous.
+ * is unavoidable here, there is no event to wait for, so it is generous.
  */
 export const quiet = () => sleep(100);

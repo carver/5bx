@@ -141,7 +141,7 @@ export function currentStreak() {
   if (!dates.size) return 0;
 
   const cursor = new Date();
-  // A streak survives "haven't worked out yet today" — start from yesterday
+  // A streak survives "haven't worked out yet today". Start from yesterday
   // if today is empty, but return 0 if yesterday is empty too.
   if (!dates.has(todayKey(cursor))) {
     cursor.setDate(cursor.getDate() - 1);

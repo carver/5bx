@@ -2,7 +2,7 @@
  * Detects a newer deployed version and offers a manual reload.
  *
  * sw.js calls self.skipWaiting() + clients.claim(), so a new version
- * activates and takes over every open tab automatically — no "waiting"
+ * activates and takes over every open tab automatically, with no "waiting"
  * worker to prompt the user about. That's fine for the cached shell, but
  * this tab's JS modules are already loaded into memory and keep running the
  * old code regardless; only an actual page reload picks up the new ones. So
@@ -11,7 +11,7 @@
  * worth doing.
  *
  * `controllerchange` fires once whenever navigator.serviceWorker.controller
- * changes — including the very first time a service worker ever claims a
+ * changes, including the very first time a service worker ever claims a
  * previously-uncontrolled page. That first firing is normal startup, not an
  * update, so it only counts as "a new version is available" when this page
  * was already being controlled by *some* worker at load time.
@@ -26,8 +26,8 @@
 import { el } from './ui.js';
 
 // Chrome only rechecks sw.js for a new version on navigation, and throttles
-// that to roughly once every 24h. Nudging registration.update() ourselves —
-// on focus, and on this interval for tabs left open — means a deployed
+// that to roughly once every 24h. Nudging registration.update() ourselves,
+// on focus and on this interval for tabs left open, means a deployed
 // update gets noticed well inside a day instead of possibly waiting for one.
 const RECHECK_INTERVAL_MS = 60 * 60 * 1000;
 const SAFE_TO_SHOW_POLL_MS = 5000;
@@ -49,7 +49,7 @@ export function watchForUpdate(registration) {
       registration.update().catch(() => {});
     }
   });
-  // unref (Node only — browsers' setInterval return value has no such
+  // unref (Node only; browsers' setInterval return value has no such
   // method) so a lingering interval can't keep a test runner's process
   // alive; harmless in the browser, where nothing is waiting to exit.
   const handle = setInterval(() => registration.update().catch(() => {}),
@@ -61,7 +61,7 @@ export function watchForUpdate(registration) {
  * Ask the browser to re-fetch sw.js right now, for the Settings button.
  *
  * The automatic paths above are deliberately unhurried (focus, hourly), so
- * this exists for "I just deployed something, is it here yet?" — and as the
+ * this exists for "I just deployed something, is it here yet?", and as the
  * escape hatch when a reload alone can't help, which is the normal case: a
  * cache-first shell keeps serving the old files until a *new worker* installs,
  * so pull-to-refresh cannot pick up a deploy on its own.

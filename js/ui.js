@@ -1,4 +1,4 @@
-/* Tiny DOM helpers. Deliberately minimal — no framework, no templating. */
+/* Tiny DOM helpers. Deliberately minimal: no framework, no templating. */
 
 /**
  * el('button.btn.primary', { onclick }, 'Start')

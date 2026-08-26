@@ -125,7 +125,7 @@ function sparkline(levelLog, now = Date.now()) {
   const tEnd = Math.max(now, levelLog[levelLog.length - 1].ts);
   const span = tEnd - t0;
   // Everything at one instant (a single entry, or a fresh import) has no time
-  // spread to scale — fall back to even spacing so the shape is still legible.
+  // spread to scale, so fall back to even spacing so the shape is still legible.
   const xAt = (ts, i) => (span > 0
     ? PAD + (Math.min(Math.max(ts, t0), tEnd) - t0) / span * (W - PAD * 2)
     : PAD + (levelLog.length === 1 ? 0 : i / (levelLog.length - 1)) * (W - PAD * 2));
@@ -135,7 +135,7 @@ function sparkline(levelLog, now = Date.now()) {
     H - PAD - (values[i] / maxLevel) * (H - PAD * 2),
   ]);
 
-  // Step path — level changes are discrete events, not a smooth ramp.
+  // Step path: level changes are discrete events, not a smooth ramp.
   let d = `M ${points[0][0].toFixed(1)} ${points[0][1].toFixed(1)}`;
   for (let i = 1; i < points.length; i += 1) {
     d += ` H ${points[i][0].toFixed(1)} V ${points[i][1].toFixed(1)}`;

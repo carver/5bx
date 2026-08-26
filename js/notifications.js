@@ -1,18 +1,18 @@
 /*
  * Daily local reminder.
  *
- * PLATFORM CAVEAT — read before filing a bug against this file:
+ * PLATFORM CAVEAT, read before filing a bug against this file:
  * There is no reliable, universally supported way for a web app to schedule a
  * future notification on Android. What we do, best-available-first:
  *
- *   1. Notification Triggers (`TimestampTrigger`) — genuinely scheduled by the
- *      OS, fires even with the browser closed. Only available behind a flag /
+ *   1. Notification Triggers (`TimestampTrigger`): scheduled by the OS,
+ *      fires even with the browser closed. Only available behind a flag /
  *      origin trial in Chrome, so it is feature-detected, not relied upon.
- *   2. Periodic Background Sync — the service worker gets woken roughly daily
+ *   2. Periodic Background Sync: the service worker gets woken roughly daily
  *      (installed PWAs only, and Chrome decides the cadence based on how often
  *      you actually use the app). We check "is the reminder due today?" on each
  *      wake-up.
- *   3. An in-page setTimeout — exact, but only while the tab is alive.
+ *   3. An in-page setTimeout: exact, but only while the tab is alive.
  *
  * Consequence: if the browser is fully closed for a long stretch and neither
  * (1) nor (2) is available, the reminder can be late or skipped. That is an
@@ -69,7 +69,7 @@ export function permissionState() {
 
 /**
  * Ask for permission. The caller is responsible for explaining *why* before
- * calling this — the browser prompt itself gives no context, and a cold
+ * calling this. The browser prompt itself gives no context, and a cold
  * prompt is the fastest way to get permanently blocked.
  */
 export async function requestPermission() {
@@ -151,7 +151,7 @@ async function syncTriggeredNotification(registration, settings, enabled) {
       showTrigger: new TimestampTrigger(
         nextOccurrence(settings.reminderTime).getTime()),
     });
-  } catch { /* unsupported — the other mechanisms still apply */ }
+  } catch { /* unsupported; the other mechanisms still apply */ }
 }
 
 function schedulePageTimeout(registration, settings) {
@@ -159,7 +159,7 @@ function schedulePageTimeout(registration, settings) {
   const delay = due.getTime() - Date.now();
   pageTimer = setTimeout(async () => {
     const kv = await readReminderKV();
-    // Must be the local calendar day, not UTC — this key is shared with
+    // Must be the local calendar day, not UTC. This key is shared with
     // sw.js's periodicsync handler, which dedupes on the local date. A UTC
     // date here would drift from the local one for part of the day in most
     // timezones, and the two mechanisms would disagree about whether

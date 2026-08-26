@@ -1,5 +1,5 @@
 /*
- * 5BX styles — hand-written, mobile-first, no framework.
+ * 5BX styles: hand-written, mobile-first, no framework.
  *
  * Two things drive most decisions here:
  *  - Speed: system fonts only, no images, no downloads beyond this file.
@@ -306,7 +306,7 @@ h1, h2 { margin: 0; line-height: 1.25; }
   font-variant-numeric: tabular-nums;
 }
 
-/* Held still during a jump block — you're not taking steps right now. */
+/* Held still during a jump block; you're not taking steps right now. */
 .steps.frozen,
 .set-steps.frozen { opacity: 0.45; }
 

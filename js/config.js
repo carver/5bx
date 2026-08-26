@@ -1,5 +1,5 @@
 /*
- * 5BX configuration — ALL workout data lives here.
+ * 5BX configuration. ALL workout data lives here.
  * ---------------------------------------------------------------------------
  * This is the only file you need to edit to tune the program: rep targets,
  * exercise descriptions, timings, and the age -> minimum-days table.
@@ -37,7 +37,7 @@ export const CONFIG = {
    * 6 minutes, the running cadence is scaled up so the estimate still reaches
    * the target step count exactly at 6:00. The 11-minute timing is untouched.
    *
-   * A rough guess — tune it if the estimate runs ahead of or behind your real
+   * A rough guess; tune it if the estimate runs ahead of or behind your real
    * count. Per-chart override: set `secondsEach` on that chart's exercise 5
    * `interval` object.
    */
@@ -86,7 +86,7 @@ export const MIN_DAYS_BY_AGE = [
 export const DEFAULT_MIN_DAYS = 4;
 
 /**
- * Deconditioning guidance, shown as advice only — the app never silently
+ * Deconditioning guidance, shown as advice only; the app never silently
  * resets your level. Use Settings -> "Jump to chart/level" to act on it.
  */
 export const DECONDITIONING = {
@@ -441,7 +441,7 @@ export const CHARTS = [
   {
     id: 5,
     name: 'Chart 5',
-    // TODO: no bird-dog variant defined yet — exercise 2 is the original.
+    // TODO: no bird-dog variant defined yet; exercise 2 is the original.
     note: 'Exercise 2 is still the original sit-up — no bird dog defined yet.',
     exercises: [
       {
@@ -517,7 +517,7 @@ export const CHARTS = [
   {
     id: 6,
     name: 'Chart 6',
-    // TODO: no bird-dog variant defined yet — exercise 2 is the original.
+    // TODO: no bird-dog variant defined yet; exercise 2 is the original.
     note: 'Usually found only in champion athletes. Exercise 2 is still the ' +
           'original sit-up — no bird dog defined yet.',
     exercises: [
@@ -623,7 +623,7 @@ export function minDaysForAge(age) {
 
 /**
  * The next chart+level after the given one, or null if already at 6 A+
- * (the top of the program — there is nowhere further to advance).
+ * (the top of the program; there is nowhere further to advance).
  */
 export function nextPosition(chartId, levelIndex) {
   if (levelIndex < LEVELS.length - 1) {

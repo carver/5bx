@@ -5,7 +5,7 @@
  * test/router.test.js covers the routing rules against stub views; this file
  * exists to catch the app being wired up to ignore them.
  *
- * Needs jsdom, so it skips itself when jsdom is missing — unless CI sets
+ * Needs jsdom, so it skips itself when jsdom is missing, unless CI sets
  * REQUIRE_DOM_TESTS=1.
  */
 
@@ -22,7 +22,7 @@ if (!JSDOM && process.env.REQUIRE_DOM_TESTS === '1') {
     'REQUIRE_DOM_TESTS=1 but jsdom is not installed. Run `npm ci`.');
 }
 
-const skip = JSDOM ? false : 'jsdom is not installed — run `npm install`';
+const skip = JSDOM ? false : 'jsdom is not installed; run `npm install`';
 
 describe('app navigation', { skip }, () => {
   let window; let root;

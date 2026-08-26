@@ -9,12 +9,12 @@
  *
  * Two consequences the on-screen step estimate has to respect:
  *
- *  1. The estimate FREEZES during a jump block — you aren't taking steps.
+ *  1. The estimate FREEZES during a jump block; you aren't taking steps.
  *  2. Because the blocks consume part of the six minutes, the running cadence
  *     must be higher than target/duration for the estimate to still reach the
  *     target at 6:00. Running time is the duration minus all the jump blocks.
  *
- * The exercise timer itself is untouched — it always runs the full 6:00.
+ * The exercise timer itself is untouched; it always runs the full 6:00.
  *
  * Everything here is a pure function of elapsed time, so the estimate is
  * self-correcting after a pause, a resume, or the phone sleeping.
@@ -45,7 +45,7 @@ export function createPace({ targetSteps, totalSeconds, interval }) {
    */
   const blocks = Math.max(0, Math.ceil(targetSteps / interval.every) - 1);
 
-  // Steps in the last set — always in (0, every].
+  // Steps in the last set, always in (0, every].
   const finalSetSteps = targetSteps - blocks * interval.every;
 
   // Guard against a pathological config (say, 30s per jump) leaving no time
@@ -96,7 +96,7 @@ export function paceAt(pace, elapsed) {
   const intoCycle = elapsed - fullCycles * cycle;
   const inBreak = fullCycles < blocks && intoCycle > runPerBlock;
 
-  // Time spent actually running — jump blocks are excluded, which is what
+  // Time spent actually running. Jump blocks are excluded, which is what
   // freezes the step estimate.
   const runElapsed = fullCycles * runPerBlock +
     (inBreak ? runPerBlock : intoCycle);
@@ -110,7 +110,7 @@ export function paceAt(pace, elapsed) {
   /*
    * Which set of `every` steps you are in. `fullCycles` doubles as the 0-based
    * set index in both states: while running it is the set in progress, and
-   * during a break it is the set you have just finished — which is what we
+   * during a break it is the set you have just finished, which is what we
    * want on screen, held at its full count until the run resumes.
    */
   const setIndex = fullCycles;

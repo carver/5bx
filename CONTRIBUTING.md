@@ -23,7 +23,7 @@ npm run stamp       # re-stamp the app version after changing a shipped file
 npm run serve       # static server on http://localhost:8000
 ```
 
-`npm test` works on a bare checkout with nothing installed — the three DOM
+`npm test` works on a bare checkout with nothing installed. The three DOM
 suites skip themselves if `jsdom` is missing and the other ~213 tests still
 run. Run `npm install` to get them too.
 
@@ -33,7 +33,7 @@ opening `index.html` directly.
 ## After changing anything
 
 1. **Edited `js/config.js`?** Run `npm run verify`. It checks the shape of every
-   chart and, most usefully, that no rep target *decreases* as levels rise —
+   chart and, most usefully, that no rep target *decreases* as levels rise,
    which catches most transposition slips when retuning a column.
 2. **Added or renamed a file under `js/` or `icons/`?** Add it to `SHELL_FILES`
    in `sw.js`, or the app breaks offline while still working in dev. There's a
@@ -43,7 +43,7 @@ opening `index.html` directly.
    `js/version.js` (shown in Settings → Version) and `CACHE_VERSION` in `sw.js`.
 
    This is not bookkeeping. The shell is served cache-first, and a browser only
-   installs a new worker when `sw.js` differs byte-for-byte — so shipping a
+   installs a new worker when `sw.js` differs byte-for-byte, so shipping a
    change without moving the version pins returning visitors to the old code
    *permanently*. Reloading, pull-to-refresh and the update banner are all
    powerless against it, and the deploy looks perfectly healthy from the
@@ -61,7 +61,7 @@ opening `index.html` directly.
 | `test/router.test.js` | View switching and the back button, against stub views (needs `jsdom`) |
 | `test/app.test.js` | The booted app end to end, driven by taps and the back button (needs `jsdom`) |
 
-Tests use the built-in `node:test` runner — no framework. Each file runs in its
+Tests use the built-in `node:test` runner, no framework. Each file runs in its
 own process, so a test that mutates module state (the DOM suite shrinks
 `TIMING_SECONDS` so a workout takes seconds instead of 11 minutes) can't leak
 into the others.
@@ -80,10 +80,10 @@ Worth knowing about two deliberate testing choices:
 
 `.github/workflows/ci.yml` runs on every pull request and every push to `main`:
 
-- **`Test (Node 22 / 24)`** — `npm ci`, then the full suite plus
+- **`Test (Node 22 / 24)`**: `npm ci`, then the full suite plus
   `npm run verify`. `REQUIRE_DOM_TESTS=1` is set so a broken install fails
   loudly instead of silently skipping the DOM tests.
-- **`Runs without dependencies`** — the suite with nothing installed, proving
+- **`Runs without dependencies`**: the suite with nothing installed, proving
   the app never picks up a runtime dependency by accident.
 
 All three checks must pass before a pull request can be merged.

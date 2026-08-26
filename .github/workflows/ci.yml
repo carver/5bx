@@ -36,7 +36,7 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: npm
 
-      # jsdom is the only dependency, and it is dev-only — the app itself
+      # jsdom is the only dependency, and it is dev-only. The app itself
       # ships zero dependencies.
       - name: Install dev dependencies
         run: npm ci

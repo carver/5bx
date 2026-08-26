@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /*
  * Sanity-checks js/config.js after you edit it, plus the progression rules in
- * js/state.js. Zero dependencies — just `node tools/verify-config.mjs`.
+ * js/state.js. Zero dependencies; just `node tools/verify-config.mjs`.
  *
  * This is a development convenience only. Nothing here ships to the browser,
  * and the app itself neither builds nor installs anything.
@@ -124,7 +124,7 @@ for (const chart of cfg.CHARTS) {
   }
 }
 
-// Advisory, not a failure — the plan itself is demanding at the top charts.
+// Advisory, not a failure; the plan itself is demanding at the top charts.
 if (fastest.cadence > 240) {
   console.log(`NOTE  fastest implied cadence is ${Math.round(fastest.cadence)} ` +
     `steps/min (chart ${fastest.chart} ${fastest.level}, ` +

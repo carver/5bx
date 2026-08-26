@@ -3,7 +3,7 @@
  * driven from the first Start tap to the level-up screen.
  *
  * These need a DOM, so jsdom is a devDependency. It is NOT required to run the
- * rest of the suite — if it isn't installed these tests skip with a message
+ * rest of the suite; if it isn't installed these tests skip with a message
  * rather than failing, so `node --test` works on a bare checkout.
  *
  * The workout tests shrink TIMING_SECONDS so a run takes ~2s instead of 11
@@ -29,7 +29,7 @@ if (!JSDOM && process.env.REQUIRE_DOM_TESTS === '1') {
     'REQUIRE_DOM_TESTS=1 but jsdom is not installed. Run `npm ci`.');
 }
 
-const skip = JSDOM ? false : 'jsdom is not installed — run `npm install`';
+const skip = JSDOM ? false : 'jsdom is not installed; run `npm install`';
 
 describe('DOM', { skip }, () => {
   let window; let root; let cfg; let store;
@@ -51,7 +51,7 @@ describe('DOM', { skip }, () => {
     window = installDom(JSDOM, readFileSync(repoPath('index.html'), 'utf8'));
     root = window.document.getElementById('app');
 
-    // Import only after the DOM globals exist — several modules read from
+    // Import only after the DOM globals exist; several modules read from
     // `document` at module scope.
     cfg = await import('../js/config.js');
     store = await import('../js/state.js');
@@ -153,7 +153,7 @@ describe('DOM', { skip }, () => {
       const total = treads.reduce((a, b) => a + b, 0);
 
       assert.ok(treads[0] < 1, `skipped level should be a sliver, got ${treads[0]}`);
-      // 6 of 8 days, then 2 of 8 — within a pixel of the true proportions.
+      // 6 of 8 days, then 2 of 8, within a pixel of the true proportions.
       assert.ok(Math.abs(treads[1] / total - 6 / 8) < 0.01, `got ${treads[1]}`);
       assert.ok(Math.abs(treads[2] / total - 2 / 8) < 0.01, `got ${treads[2]}`);
     });
@@ -291,8 +291,8 @@ describe('DOM', { skip }, () => {
     });
 
     test('guards leaving the same way for back and for Quit', async () => {
-      /* The router asks confirmLeave() before letting anything — an Android
-       * back press included — take the workout off screen. */
+      /* The router asks confirmLeave() before letting anything, an Android
+       * back press included, take the workout off screen. */
       const realConfirm = window.confirm;
       let asked = 0;
       const answerConfirm = (answer) => {
@@ -307,7 +307,7 @@ describe('DOM', { skip }, () => {
 
         answerConfirm(false);
         assert.equal(view.confirmLeave(), true,
-          'nothing is logged before the first exercise — leave silently');
+          'nothing is logged before the first exercise, so leave silently');
         assert.equal(asked, 0);
 
         await doExercise(true);
@@ -322,7 +322,7 @@ describe('DOM', { skip }, () => {
         assert.match(text(), /Session complete/);
         answerConfirm(false);
         assert.equal(view.confirmLeave(), true,
-          'the summary is already logged — back must not offer to discard it');
+          'the summary is already logged, so back must not offer to discard it');
         assert.equal(asked, 2, 'no prompt once the session is logged');
       } finally {
         window.confirm = realConfirm;
@@ -464,7 +464,7 @@ describe('DOM', { skip }, () => {
 
     // The preceding "exercise 5 pacing" suite leaves a run's countdown mid-
     // flight without ever reaching its checkpoint, so keepAwake can still be
-    // 'true' on entry here — reset it before every test, not just after,
+    // 'true' on entry here; reset it before every test, not just after,
     // rather than depending on suite ordering.
     beforeEach(() => {
       document.body.dataset.keepAwake = 'false';
@@ -488,7 +488,7 @@ describe('DOM', { skip }, () => {
       update.watchForUpdate({ update: async () => {} });
       fake.dispatchEvent(new window.Event('controllerchange'));
       assert.equal(document.body.querySelector('.update-banner'), null,
-        'the first-ever activation is not an update — must stay silent');
+        'the first-ever activation is not an update and must stay silent');
     });
 
     test('does not interrupt an in-progress exercise', () => {

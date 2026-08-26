@@ -1,5 +1,5 @@
 /*
- * Deployment integrity — the checks that catch a broken GitHub Pages deploy
+ * Deployment integrity: the checks that catch a broken GitHub Pages deploy
  * rather than broken logic. All of these have a real failure mode:
  *
  *  - a new js/ module not added to the service worker's cache list means the
@@ -40,7 +40,7 @@ describe('service worker app shell', () => {
     ];
     for (const path of shipped) {
       assert.ok(shellFiles.includes(path),
-        `${path} is served but not in SHELL_FILES — it would break offline`);
+        `${path} is served but not in SHELL_FILES; it would break offline`);
     }
   });
 
@@ -62,9 +62,9 @@ describe('service worker app shell', () => {
     const { contentHash, committedVersion, hashOf } =
       await import('../tools/stamp-version.mjs');
     const committed = committedVersion();
-    assert.ok(committed, 'js/version.js has no APP_VERSION — run `npm run stamp`');
+    assert.ok(committed, 'js/version.js has no APP_VERSION; run `npm run stamp`');
     assert.equal(hashOf(committed), contentHash(),
-      'a shipped file changed without re-stamping — run `npm run stamp`. ' +
+      'a shipped file changed without re-stamping; run `npm run stamp`. ' +
       'Without it the service worker keeps serving the old cached copy.');
   });
 
@@ -72,7 +72,7 @@ describe('service worker app shell', () => {
     const { committedVersion } = await import('../tools/stamp-version.mjs');
     assert.match(swSource,
       new RegExp(`const CACHE_VERSION = '${committedVersion()}';`),
-      'sw.js and js/version.js disagree — run `npm run stamp`');
+      'sw.js and js/version.js disagree; run `npm run stamp`');
   });
 
   test('the KV cache is not swept by the shell cleanup', () => {
@@ -86,7 +86,7 @@ describe('reminder date keys', () => {
   // both dedupe "did today's reminder already fire?" against the same
   // shared KV entry, so they MUST agree on what "today" means. sw.js can
   // only use its own local-date helper (a service worker has no page module
-  // graph to import from), so js/notifications.js has to match it by hand —
+  // graph to import from), so js/notifications.js has to match it by hand.
   // toISOString() gives the UTC date, which drifts from the local one for
   // part of the day in most timezones and silently reintroduces a duplicate
   // evening notification.
@@ -162,7 +162,7 @@ describe('manifest', () => {
 });
 
 describe('icons', () => {
-  /** Minimal PNG header reader — avoids pulling in an image library. */
+  /** Minimal PNG header reader; avoids pulling in an image library. */
   function pngSize(path) {
     const bytes = readFileSync(repoPath(path));
     assert.deepEqual([...bytes.subarray(0, 8)],
@@ -186,16 +186,16 @@ describe('icons', () => {
 
   test('the badge icon has real transparency', () => {
     // Android's notification badge/status-bar icon uses ONLY the alpha
-    // channel — every opaque pixel becomes a solid flat color. A badge PNG
+    // channel; every opaque pixel becomes a solid flat color. A badge PNG
     // with no transparent pixels at all renders as a solid block (the "white
     // square in notification areas" bug), so this specifically must NOT be
     // the same fully-opaque file as the app icon.
     const bytes = readFileSync(repoPath('icons/icon-badge-96.png'));
-    assert.equal(bytes[25], 6, 'must be PNG color type 6 (RGBA) — no alpha channel means no silhouette');
+    assert.equal(bytes[25], 6, 'must be PNG color type 6 (RGBA); no alpha channel means no silhouette');
   });
 
   test('notifications never use the opaque app icon as the badge', () => {
-    // badge must point at the transparent silhouette, not icon-192 — see
+    // badge must point at the transparent silhouette, not icon-192; see
     // "the badge icon has real transparency" above for why.
     for (const file of ['js/notifications.js', 'sw.js']) {
       const contents = read(file);
@@ -216,7 +216,7 @@ describe('no runtime dependencies', () => {
         .map((m) => m[1]);
       for (const specifier of imports) {
         assert.ok(specifier.startsWith('./') || specifier.startsWith('../'),
-          `js/${name} imports "${specifier}" — the app must stay dependency-free`);
+          `js/${name} imports "${specifier}"; the app must stay dependency-free`);
       }
     }
   });

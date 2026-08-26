@@ -9,7 +9,7 @@
 export function createRouter({ views, window: win = globalThis.window }) {
   const home = 'home';
   /*
-   * The views behind us, rooted at Home — our mirror of the history entries
+   * The views behind us, rooted at Home. Our mirror of the history entries
    * this app owns. Each entry's state carries its depth, which is how a
    * popstate tells us where in the stack the user has landed.
    */
@@ -19,8 +19,8 @@ export function createRouter({ views, window: win = globalThis.window }) {
   let confirmLeave = () => true;
 
   /*
-   * A view returns nothing, a teardown function, or — when leaving it is
-   * destructive — { teardown, confirmLeave }. confirmLeave() is asked before
+   * A view returns nothing, a teardown function, or, when leaving it is
+   * destructive, { teardown, confirmLeave }. confirmLeave() is asked before
    * *any* departure, so a back press and an on-screen quit button get the
    * same answer.
    */
@@ -38,7 +38,7 @@ export function createRouter({ views, window: win = globalThis.window }) {
 
   /*
    * Navigating to a screen we came from is a *back* move, however it was
-   * triggered — an on-screen "Back" button included. Popping keeps the two
+   * triggered, an on-screen "Back" button included. Popping keeps the two
    * ways out of a screen in agreement; pushing a second Home entry would make
    * the next back press appear to go forwards.
    */
@@ -57,7 +57,7 @@ export function createRouter({ views, window: win = globalThis.window }) {
     const { view = home, depth = 0 } = event.state ?? {};
 
     // The entry is already gone by the time we hear about it, so a refusal
-    // has to put it back — otherwise the next back press would skip past the
+    // has to put it back; otherwise the next back press would skip past the
     // screen the user just chose to stay on.
     if (!confirmLeave()) {
       win.history.pushState({ view: showing, depth: stack.length - 1 }, '');

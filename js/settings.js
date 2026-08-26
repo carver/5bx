@@ -253,8 +253,8 @@ function dataSection(rerender) {
  * Which version am I running, and can I have the new one now?
  *
  * An installed PWA gives you no address bar and no visible reload, and the
- * shell is served cache-first, so "reload the page" genuinely cannot fetch a
- * new deploy — only a new service worker installing can. This section is the
+ * shell is served cache-first, so "reload the page" cannot fetch a
+ * new deploy; only a new service worker installing can. This section is the
  * manual lever for that, and the version string is what makes the answer
  * checkable: compare it against the version shown by the deploy you expect.
  */
@@ -272,7 +272,7 @@ function versionSection() {
 
       if (result === 'updated') {
         // The new worker has installed and claimed this page, but this tab's
-        // JS is still the old code in memory — only a reload swaps it in.
+        // JS is still the old code in memory; only a reload swaps it in.
         status.textContent = 'A new version is ready to install.';
         if (!actions.contains(reload)) actions.append(reload);
         return;

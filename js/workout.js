@@ -50,7 +50,7 @@ export function renderWorkout(root, { onExit }) {
    * pressed, so both routes out are equally hard to hit by accident.
    *
    * Nothing is at stake before the first exercise is answered, and by the
-   * summary the session is already logged — only in between is there anything
+   * summary the session is already logged; only in between is there anything
    * to lose.
    */
   function confirmLeave() {
@@ -119,8 +119,8 @@ export function renderWorkout(root, { onExit }) {
     acquireWakeLock();
 
     // Exercise 5 only: pace the "every 75 steps do N jumps" cue off the clock,
-    // since counting taps while running in place isn't realistic. See pace.js
-    // — the estimate freezes during each jump block and the cadence allows for
+    // since counting taps while running in place isn't realistic. See pace.js.
+    // The estimate freezes during each jump block and the cadence allows for
     // the time those blocks take.
     const pace = exercise.interval
       ? createPace({
@@ -163,7 +163,7 @@ export function renderWorkout(root, { onExit }) {
         `${Math.ceil(now.breakRemaining)}s`,
       );
     } else if (pace.inBreak) {
-      // Block finished — cue the return to running and clear the banner.
+      // Block finished: cue the return to running and clear the banner.
       pace.inBreak = false;
       cueBlip();
       view.hideBanner();
@@ -173,7 +173,7 @@ export function renderWorkout(root, { onExit }) {
   function buildRunningView(exercise, pace) {
     const timeNode = el('div.clock', {}, formatTime(TIMING_SECONDS[session.index]));
     // Live estimate of where you should be in the set, counting up over the
-    // exercise's duration — paced exactly like exercise 5's step estimate.
+    // exercise's duration, paced like exercise 5's step estimate.
     const stepNode = el('p.steps', {},
       `0 of ${targets[session.index]} ${exercise.unit}`);
     // Per-set count, restarting at each break to match counting in your head.
@@ -317,7 +317,7 @@ export function renderWorkout(root, { onExit }) {
   function renderSummary() {
     cleanup();
 
-    // Log first, then read the counters — so today counts toward days-at-level.
+    // Log first, then read the counters, so today counts toward days-at-level.
     const logged = store.logSession(session.results);
     const days = store.daysAtLevel();
     const needed = store.requiredDays();

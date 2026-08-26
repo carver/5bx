@@ -4,14 +4,14 @@
  *
  * These are the tests for the hardware back button on Android. Installed as a
  * PWA there is no browser chrome, so back is the *only* way out of a screen
- * other than an on-screen button — and if the app never puts anything on the
+ * other than an on-screen button, and if the app never puts anything on the
  * session history, back drops straight out to the launcher instead.
  *
  * Views are injected as plain recorder functions: the router's job is choosing
  * and unmounting views, not drawing them (test/dom.test.js covers the drawing).
  *
  * Like test/dom.test.js this needs jsdom, so it skips itself when jsdom is
- * missing — unless CI sets REQUIRE_DOM_TESTS=1.
+ * missing, unless CI sets REQUIRE_DOM_TESTS=1.
  */
 
 import { test, describe } from 'node:test';
@@ -26,7 +26,7 @@ if (!JSDOM && process.env.REQUIRE_DOM_TESTS === '1') {
     'REQUIRE_DOM_TESTS=1 but jsdom is not installed. Run `npm ci`.');
 }
 
-const skip = JSDOM ? false : 'jsdom is not installed — run `npm install`';
+const skip = JSDOM ? false : 'jsdom is not installed; run `npm install`';
 
 const { createRouter } = skip ? {} : await import('../js/router.js');
 
