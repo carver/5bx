@@ -29,6 +29,10 @@ import { todayKey } from './state.js';
 const KV_CACHE = '5bx-kv';
 const KV_KEY = new URL('reminder-settings.json', document.baseURI).href;
 const PERIODIC_TAG = '5bx-daily-reminder';
+// One tag for every path that shows the daily reminder (here and in
+// sw.js), so a second mechanism firing the same day replaces the
+// notification instead of stacking a duplicate. A test keeps them equal.
+const REMINDER_TAG = '5bx-daily';
 
 let pageTimer = null;
 
@@ -138,13 +142,13 @@ async function syncTriggeredNotification(registration, settings, enabled) {
   try {
     // Clear any previously scheduled reminder before (re)scheduling.
     const scheduled = await registration.getNotifications({
-      includeTriggered: true, tag: PERIODIC_TAG,
+      includeTriggered: true, tag: REMINDER_TAG,
     });
     scheduled.forEach((n) => n.close());
 
     if (!enabled) return;
     await registration.showNotification('Time for your 5BX', {
-      tag: PERIODIC_TAG,
+      tag: REMINDER_TAG,
       body: '11 minutes. Five exercises.',
       icon: './icons/icon-192.png',
       badge: './icons/icon-badge-96.png',
@@ -170,7 +174,7 @@ function schedulePageTimeout(registration, settings) {
         body: '11 minutes. Five exercises.',
         icon: './icons/icon-192.png',
         badge: './icons/icon-badge-96.png',
-        tag: '5bx-reminder-fired',
+        tag: REMINDER_TAG,
       });
       await writeReminderKV({ ...kv, lastNotified: key });
     }

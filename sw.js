@@ -13,7 +13,7 @@
  * matter how often they reload. test/static.test.js enforces this.
  */
 
-const CACHE_VERSION = '2026.08.26-65f86b08';
+const CACHE_VERSION = '2026.08.26-07fddf9b';
 const SHELL_CACHE = `5bx-shell-${CACHE_VERSION}`;
 
 /* Cache used as a key/value store shared with the page (reminder settings). */
@@ -169,7 +169,7 @@ async function maybeNotify() {
     body: '11 minutes. Five exercises.',
     icon: './icons/icon-192.png',
     badge: './icons/icon-badge-96.png',
-    tag: '5bx-daily',
+    tag: '5bx-daily', // same as REMINDER_TAG in js/notifications.js (tested)
     renotify: false,
   });
   await writeKV({ ...kv, lastNotified: today });

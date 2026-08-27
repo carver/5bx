@@ -96,6 +96,23 @@ describe('reminder date keys', () => {
       'a UTC-based date key here will disagree with sw.js\'s local-date key ' +
       '(see localDateKey in sw.js) for part of the day in most timezones');
   });
+
+  // The KV date key is the dedupe for the page timer and periodicsync, but
+  // a TimestampTrigger reminder fires from the OS without touching the KV,
+  // so a second mechanism can still fire the same day. The notification
+  // tag is the backstop: Android replaces a notification with the same tag
+  // instead of stacking a duplicate, which only works if every reminder
+  // path uses one tag. (The one-off test notification is deliberately
+  // separate.)
+  test('every daily-reminder path uses the same notification tag', () => {
+    const notifSource = read('js/notifications.js');
+    const tags = (src) => [...src.matchAll(/tag: (?:'([^']+)'|(\w+))/g)]
+      .map((m) => m[1] ?? src.match(new RegExp(`const ${m[2]} = '([^']+)'`))[1]);
+    const reminderTags = new Set(
+      [...tags(swSource), ...tags(notifSource)].filter((t) => t !== '5bx-test'));
+    assert.equal(reminderTags.size, 1,
+      `reminder notifications use several tags: ${[...reminderTags].join(', ')}`);
+  });
 });
 
 describe('relative paths', () => {
