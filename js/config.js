@@ -70,8 +70,8 @@ export const TOTAL_SECONDS = TIMING_SECONDS.reduce((a, b) => a + b, 0);
  *
  * The source table overlaps at 20 ("20 or under: 1 day" and "20-29: 2 days");
  * we resolve that in favour of the more lenient reading, so age 20 -> 1 day.
- * The original documents this for Chart 1 only; per the spec we apply it as a
- * general per-level minimum across all charts.
+ * The original prints this table for Chart 1 only. We apply it as the
+ * per-level minimum on every chart, since the plan gives no other one.
  */
 export const MIN_DAYS_BY_AGE = [
   { maxAge: 20, days: 1 },
