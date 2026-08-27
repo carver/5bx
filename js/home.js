@@ -52,7 +52,7 @@ export function renderHome(root, { onStart, onNav }) {
 
     el('div.stats',
       {},
-      stat(String(streak), streak === 1 ? 'day streak' : 'day streak'),
+      stat(String(streak), 'day streak'),
       stat(String(store.getSessions().length), 'sessions logged'),
     ),
 
