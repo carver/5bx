@@ -17,15 +17,15 @@ in the repo is exactly what the browser gets. Two consequences:
 ## Running things
 
 ```sh
-npm test            # full suite (253 tests)
+npm test            # full suite
 npm run verify      # quick sanity check on js/config.js
 npm run stamp       # re-stamp the app version after changing a shipped file
 npm run serve       # static server on http://localhost:8000
 ```
 
 `npm test` works on a bare checkout with nothing installed. The three DOM
-suites skip themselves if `jsdom` is missing and the other ~213 tests still
-run. Run `npm install` to get them too.
+suites skip themselves if `jsdom` is missing and the rest still run. Run
+`npm install` to get them too.
 
 ES modules don't load over `file://`, so use `npm run serve` rather than
 opening `index.html` directly.

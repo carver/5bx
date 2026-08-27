@@ -128,8 +128,8 @@ FAIL  chart 1 B: 5 targets — [12,12,14,8]
 FAIL  chart 1: C is not easier than C- — exercise 3
 ```
 
-Finally, bump `CACHE_VERSION` in `sw.js` so returning visitors don't get served
-the stale cached copy.
+Then run `npm run stamp` so returning visitors pick up the change (why this
+matters: [CONTRIBUTING.md](CONTRIBUTING.md)).
 
 ## Development
 
@@ -143,30 +143,11 @@ ES modules don't load over `file://`, so use the server rather than opening
 `index.html` directly. Service workers and notifications need a secure context;
 `localhost` counts, so no HTTPS setup is needed locally.
 
-### Tests
-
-253 tests on Node's built-in runner (`node:test`), no test framework.
-
-```
-test/config.test.js   chart data, rep tables vs the printed source, age table
-test/state.test.js    days-at-level, the advance gate, streaks, persistence
-test/pace.test.js     exercise 5 pacing, jump blocks, per-set counter
-test/static.test.js   service worker cache list, manifest, relative paths
-test/dom.test.js      renders every view, drives a full workout (needs jsdom)
-test/router.test.js   view switching and the back button (needs jsdom)
-test/app.test.js      the booted app, driven by taps and back (needs jsdom)
-```
-
-`npm test` works **on a bare checkout with nothing installed**. The three DOM
-suites skip themselves and the other ~213 tests still run. Run `npm install` to
-enable them.
-
-`jsdom` is the only dependency in the repo, it's dev-only, and the app itself
-ships zero runtime dependencies; a test enforces that. `package.json`
-exists so Node treats the files as ES modules and to hold the test scripts;
-nothing is bundled, transpiled, or built.
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the full layout and conventions.
+Tests run on Node's built-in runner, no framework; `npm test` works on a bare
+checkout and the three `jsdom` suites skip themselves until `npm install`.
+`package.json`, `test/`, `tools/`, and `.github/` are development
+conveniences and play no part in the deployed site. Layout and conventions:
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### Continuous integration
 
@@ -197,18 +178,6 @@ have run at least once before GitHub will list them:
 Merging is then blocked until CI is green. (On older repos the equivalent lives
 under **Settings → Branches → Add branch protection rule**.)
 
-## Running locally
-
-ES modules don't work over `file://`, so use any static server:
-
-```sh
-python3 -m http.server 8000
-# then open http://localhost:8000
-```
-
-Service workers and notifications require a secure context; `localhost`
-counts, so local development works without HTTPS.
-
 ## Hosting on GitHub Pages
 
 The repo is already structured to publish as-is: static files at the root, and
@@ -231,43 +200,6 @@ the app is absolute.
 
 Open the Pages URL in Chrome, then **⋮ → Add to Home screen**. Enable the daily
 reminder from **Settings** inside the app.
-
-## Project layout
-
-```
-index.html          markup shell
-styles.css          all styling
-manifest.json       PWA manifest (relative start_url and scope)
-sw.js               offline app shell + reminder wake-ups
-icons/              icon.svg plus the minimum PNGs for installability
-js/
-  config.js         ALL workout data, the only file you need to edit
-  state.js          localStorage persistence, progression rules
-  app.js            entry point, theme, SW registration
-  router.js         which view is showing; back-button history
-  workout.js        guided workout mode
-  home.js           dashboard
-  history.js        progress & history
-  settings.js       settings
-  notifications.js  daily reminder scheduling
-  update.js         detects a newer deployed version, offers a reload
-  version.js        generated app version (npm run stamp)
-  pace.js           live rep/step pacing estimate for every exercise
-  timer.js          wall-clock countdown, screen wake lock
-  audio.js          WebAudio cue tones
-  ui.js             small DOM helpers
-test/               node:test suites (dev only)
-tools/
-  verify-config.mjs      dev-only config sanity check (not served)
-  stamp-version.mjs      stamps the content-derived app + cache version
-  generate-badge-icon.mjs dev-only: rasterizes icon-badge.svg (not served)
-.github/workflows/
-  ci.yml            runs the suite on pull requests and pushes to main
-```
-
-`package.json`, `test/`, `tools/`, and `.github/` are development conveniences
-and play no part in the deployed site. GitHub Pages just serves the static
-files.
 
 ## Known limitation: reminder reliability
 
