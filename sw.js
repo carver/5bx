@@ -13,7 +13,7 @@
  * matter how often they reload. test/static.test.js enforces this.
  */
 
-const CACHE_VERSION = '2026.09.01-2cfe0b12';
+const CACHE_VERSION = '2026.09.01-5fc9f390';
 const SHELL_CACHE = `5bx-shell-${CACHE_VERSION}`;
 
 /* Cache used as a key/value store shared with the page (reminder settings). */

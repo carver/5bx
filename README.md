@@ -91,9 +91,53 @@ leg raise.
   entry, so Android's hardware back button walks back through the app instead
   of minimising it. Back out of a half-finished workout and you get the same
   confirm as the on-screen **Quit workout** button.
+- **Cloud backup and a new phone.** Off by default and local-only until you
+  set it up. Once on, the history is copied to your own Firebase project after
+  each workout, a dated copy is kept for each of the last 30 days, and another
+  phone picks it all up by pointing its camera at a QR code in Settings. See
+  [Cloud backup](#cloud-backup).
 - **Dark mode** from `prefers-color-scheme`, with a manual override in Settings.
 - **Large hit targets** throughout (≥48px, 68px+ for primary actions) with wide
   spacing between adjacent controls.
+
+## Cloud backup
+
+Everything below is optional. With nothing configured the app behaves exactly
+as it always did: one browser's `localStorage`, no network, nothing to set up.
+
+```sh
+npm run setup:sync
+```
+
+That walks you through creating a Firebase project, turning on Firestore and
+anonymous sign-in, and deploying the security rules, then writes the project ID
+and API key into `js/sync-config.js`. Both are public values. They identify the
+project, they don't grant access, so commit them. GitHub Pages serves the app
+straight from the repo, and an uncommitted config reaches nobody.
+
+**How a second phone gets the history.** Settings → Cloud backup → **Add
+another phone** shows a QR code. Point the other phone's camera at it. The link
+opens the app, which merges the two histories and lands on Progress. There is
+nothing to install, type, or paste on the receiving phone, and nothing is
+overwritten: joining is a union, so a phone that has already logged a few
+workouts keeps them.
+
+**What protects the data is the link itself.** There is no account and no
+password. The history lives at an unguessable random address, and anyone who
+ever sees the pairing link can read and write it, in the same way as an
+unlisted document link. That tradeoff, and why it is acceptable for a record of
+how many push-ups you did, is argued out in
+[docs/adr/0001](docs/adr/0001-cloud-backup-via-a-shared-secret-save-id.md).
+
+**Backup, not just mirror.** Syncing alone would faithfully copy a corrupted
+save everywhere. So each day's first sync also writes a dated snapshot, and
+Settings → **Go back to an earlier day…** restores one, replacing what is on the
+phone and in the cloud. Thirty days are kept.
+
+The whole thing is roughly 300 lines with no Firebase SDK and no build step,
+talking to Firestore's REST API directly. `js/sync.js` is the transport,
+`js/backup.js` decides when to use it, and `js/merge.js`, the part worth
+reading, combines two copies of a save without losing either.
 
 ## Editing the workout data
 
@@ -137,6 +181,7 @@ matters: [CONTRIBUTING.md](CONTRIBUTING.md)).
 npm run serve      # static server on http://localhost:8000
 npm test           # full test suite
 npm run verify     # quick check on js/config.js
+npm run setup:sync # optional: point cloud backup at a Firebase project
 ```
 
 ES modules don't load over `file://`, so use the server rather than opening

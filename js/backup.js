@@ -5,10 +5,10 @@
  * is what makes both testable: the transport against a stubbed fetch, the
  * policy here against a stubbed transport.
  *
- * The policy is deliberately small. One operation — pull, merge, push, and at
- * most one snapshot a day — triggered when the app opens, a few seconds after
- * a session is logged, when the network comes back, and by the button in
- * Settings. There is no live listener and no write queue, because there is
+ * The policy is deliberately small. One operation, which pulls, merges, pushes
+ * and writes at most one snapshot a day. It runs when the app opens, a few
+ * seconds after a session is logged, when the network comes back, and when the
+ * button in Settings is pressed. There is no live listener and no write queue, because there is
  * nothing here worth that machinery: a workout is finished before it is
  * recorded, and a failed write costs nothing but a retry next time.
  */

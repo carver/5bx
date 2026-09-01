@@ -3,7 +3,7 @@
  *
  * No Firebase SDK. The app ships no runtime dependencies and has no build
  * step, and the SDK is neither small nor droppable into a plain <script
- * type="module"> — so this talks to the same service the SDK does, directly.
+ * type="module">, so this talks to the same service the SDK does, directly.
  * Three endpoints, plain fetch, roughly a page of request-shaping. What is
  * given up is the SDK's offline write queue and live snapshot listener, and
  * neither is missed: this app writes about once per workout, and reads once
@@ -45,8 +45,8 @@ export const SNAPSHOTS_KEPT = 30;
 /*
  * Firestore's hard limit is 1 MiB per document. At roughly 120 bytes per
  * session that is some twenty years of daily workouts, so this is a guard
- * against a corrupted save rather than a real ceiling — but a write that hits
- * it should say so plainly rather than fail as an opaque 400.
+ * against a corrupted save rather than a real ceiling. A write that hits it
+ * should still say so plainly rather than fail as an opaque 400.
  */
 const MAX_PAYLOAD_BYTES = 900_000;
 
@@ -303,7 +303,7 @@ export function createSyncClient({
 
     /**
      * Forget a save on this device. The save itself, and any other device
-     * paired with it, is untouched — there is deliberately no way to delete
+     * paired with it, is untouched. There is deliberately no way to delete
      * someone else's backup from here.
      */
     forgetSave(id) {

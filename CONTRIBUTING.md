@@ -11,8 +11,15 @@ in the repo is exactly what the browser gets. Two consequences:
   GitHub Pages serves project sites from `https://user.github.io/<repo>/`. This
   is also enforced by a test.
 
-`jsdom` is the single dependency, it is dev-only, and it is only used by
-`test/dom.test.js`, `test/router.test.js` and `test/app.test.js`.
+Cloud backup does not bend this. It talks to Firestore's REST API with plain
+`fetch` rather than pulling in the Firebase SDK, precisely so the two rules
+above keep holding; the reasoning is in
+[docs/adr/0001](docs/adr/0001-cloud-backup-via-a-shared-secret-save-id.md).
+
+The dev-only dependencies are `jsdom`, used by `test/dom.test.js`,
+`test/router.test.js` and `test/app.test.js`, and `qrcode-generator`, used by
+`test/qr.test.js` as a second implementation to check `js/qr.js` against.
+Neither ships.
 
 ## Running things
 
@@ -58,6 +65,11 @@ opening `index.html` directly.
 | `test/pace.test.js` | Exercise 5 pacing: jump-block schedule, step estimate, per-set counter |
 | `test/static.test.js` | Deployment integrity: service worker cache list, manifest, relative paths, no runtime deps |
 | `test/dom.test.js` | Renders every view and drives a full guided workout (needs `jsdom`) |
+| `test/merge.test.js` | Combining two copies of a save, including the commutativity, associativity and idempotence the sync relies on |
+| `test/qr.test.js` | The QR encoder, round-tripped through a decoder written from the spec, and cross-checked against `qrcode-generator` |
+| `test/sync.test.js` | The Firestore REST client: request shapes and token handling, against an injected `fetch` |
+| `test/backup.test.js` | When the app syncs and what it sends, against a stubbed transport |
+| `test/firestore-rules.test.js` | That `firestore.rules` never grants `list` on `/saves`, and agrees with the client |
 | `test/router.test.js` | View switching and the back button, against stub views (needs `jsdom`) |
 | `test/app.test.js` | The booted app end to end, driven by taps and the back button (needs `jsdom`) |
 

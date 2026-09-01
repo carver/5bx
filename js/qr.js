@@ -8,8 +8,8 @@
  *
  * Scoped deliberately narrowly. Byte mode alone (numeric and alphanumeric
  * modes would pack a link more tightly, but a link is not made of digits), one
- * error-correction level, and versions 1 to 10 — up to 213 bytes, which is
- * roughly three times the longest link this app can produce. Everything here
+ * error-correction level, and versions 1 to 10, which is up to 213 bytes.
+ * Roughly three times the longest link this app can produce. Everything here
  * follows ISO/IEC 18004; the section names are kept in the comments because
  * this is the kind of code that is unreadable without them.
  */
@@ -50,8 +50,8 @@ const PAD_BYTES = [0xec, 0x11];
 
 /*
  * Level M is 0b00 in the format information, which is not the same as its
- * index in any "L, M, Q, H" ordering — a detail worth stating, since getting it
- * wrong produces a code that looks perfect and scans as the wrong ECC level.
+ * index in any "L, M, Q, H" ordering. Worth stating, since getting it wrong
+ * produces a code that looks perfect and scans as the wrong ECC level.
  */
 const ECC_LEVEL_M = 0b00;
 const FORMAT_GENERATOR = 0b101_0011_0111;

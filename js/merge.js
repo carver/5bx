@@ -1,8 +1,8 @@
 /*
  * Reconciling two copies of the save, from this device and from the cloud.
  *
- * Almost everything worth keeping here is an append-only log — every session
- * you have ever done, every level change — so the merge is a union rather than
+ * Almost everything worth keeping here is an append-only log. Every session
+ * you have ever done, every level change. So the merge is a union rather than
  * a choice between two whole saves. That matters: last-write-wins on the whole
  * document would let a phone that has been sitting in a drawer overwrite weeks
  * of sessions the moment it comes back online, which is exactly the loss this
@@ -40,7 +40,7 @@ export function isSaveShaped(value) {
 /**
  * A copy of the save with the device-local settings removed.
  *
- * Used on the way out, so those settings do not merely lose the merge — they
+ * Used on the way out, so those settings do not merely lose the merge. They
  * never leave the phone at all, and the stored copy is the same whichever
  * device wrote it.
  */
@@ -56,7 +56,7 @@ export function withoutDeviceSettings(save) {
  * Compared by content rather than by JSON text: a merge rebuilds the save from
  * both sides, so the key order can differ between two saves that are otherwise
  * identical, and a plain stringify comparison would report a change that isn't
- * one — and then spend a network write announcing it.
+ * one, and then spend a network write announcing it.
  */
 export function sameSave(a, b) {
   return canonicalDeep(a) === canonicalDeep(b);
