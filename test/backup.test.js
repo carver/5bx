@@ -442,6 +442,37 @@ describe('scheduling', () => {
     stop();
   });
 
+  test('picks up changes made after pairing, without a reload', async () => {
+    const sync = stubSync();
+    const timers = fakeTimers();
+    const backup = createBackup({ store, sync, storage: globalThis.localStorage, ...timers });
+
+    // The app boots unpaired, then pairing happens from Settings while it runs.
+    const stop = backup.start({ addEventListener: () => {} });
+    await backup.startSharing('2026-09-01');
+    sync.calls.length = 0;
+
+    store.logSession([true, true, true, true, true]);
+    assert.equal(timers.size, 1, 'the first workout after pairing must be sent');
+
+    timers.run();
+    await backup.syncNow('2026-09-01');
+    assert.ok(operations(sync).includes('push'));
+    stop();
+  });
+
+  test('an unpaired device schedules nothing', () => {
+    const sync = stubSync();
+    const timers = fakeTimers();
+    const backup = createBackup({ store, sync, storage: globalThis.localStorage, ...timers });
+
+    const stop = backup.start({ addEventListener: () => {} });
+    store.logSession([true, true, true, true, true]);
+
+    assert.equal(timers.size, 0);
+    stop();
+  });
+
   test('stopping detaches the listener', async () => {
     const sync = stubSync({ remote: remoteSave() });
     sync.joinSave(SAVE_ID);

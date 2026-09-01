@@ -224,10 +224,12 @@ export function createBackup({
      * the network comes back to a device with an unsent change.
      */
     start({ addEventListener = globalThis.addEventListener } = {}) {
-      if (!sync.activeSaveId()) return () => {};
-
+      // Attached even when this device is not paired yet, because pairing
+      // happens from Settings while the app is running. Bailing out here would
+      // leave the very first workout after "Start backing up" unsent until the
+      // app was next reloaded.
       const unsubscribe = store.subscribe(() => {
-        if (applyingRemote) return;
+        if (applyingRemote || !sync.activeSaveId()) return;
         cancel(pushTimer);
         pushTimer = schedule(() => syncNow(), PUSH_DELAY_MS);
       });
