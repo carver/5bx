@@ -70,6 +70,7 @@ opening `index.html` directly.
 | `test/sync.test.js` | The Firestore REST client: request shapes and token handling, against an injected `fetch` |
 | `test/backup.test.js` | When the app syncs and what it sends, against a stubbed transport |
 | `test/firestore-rules.test.js` | That `firestore.rules` never grants `list` on `/saves`, and agrees with the client |
+| `test/handover.test.js` | Moving a history to a new phone, end to end, against an in-memory Firestore |
 | `test/router.test.js` | View switching and the back button, against stub views (needs `jsdom`) |
 | `test/app.test.js` | The booted app end to end, driven by taps and the back button (needs `jsdom`) |
 

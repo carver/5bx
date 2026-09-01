@@ -151,9 +151,9 @@ export function createBackup({
      * Begin backing up from this device, and put the first copy in place
      * before returning, so the pairing link is immediately worth scanning.
      */
-    async startSharing() {
+    async startSharing(today) {
       const saveId = sync.startSharing();
-      await syncNow();
+      await syncNow(today);
       return saveId;
     },
 
@@ -162,9 +162,9 @@ export function createBackup({
      * than discarded, so pairing a phone that has already been used for a few
      * workouts keeps those workouts.
      */
-    async joinSave(saveId) {
+    async joinSave(saveId, today) {
       sync.joinSave(saveId);
-      return syncNow();
+      return syncNow(today);
     },
 
     /**
