@@ -1,3 +1,7 @@
 node_modules/
 npm-debug.log*
 .DS_Store
+
+# Scratch defaults for tools/setup-sync.sh; the real values live
+# in js/sync-config.js.
+.firebase-setup.env
