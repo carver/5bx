@@ -1,0 +1,71 @@
+rules_version = '2';
+
+/*
+ * What the server enforces. See docs/adr/0001 for why the model is shaped this
+ * way, and js/sync.js for the client side of the same contract.
+ *
+ * The access boundary is the document ID: a random UUID handed over once by QR
+ * code, and unguessable in practice. That is the same trust model as an
+ * unlisted document link, and it is the whole of the protection here.
+ *
+ * `isSignedIn()` is NOT that boundary. Anonymous sign-in is open to anyone who
+ * loads the site, so this is a speed bump against drive-by bots and nothing
+ * more. It deliberately does not check *which* anonymous user is asking,
+ * because every device holding the link is meant to have access, and they are
+ * all different anonymous users.
+ *
+ * There is no `allow list` on /saves, and there must never be one. Default-deny
+ * already covers that; it is written down here so a later edit does not add one
+ * without seeing what it would open up — any signed-in stranger enumerating
+ * every save in the project, without needing to guess a single ID.
+ */
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /*
+     * A shape check, not validation. The save travels as one opaque JSON
+     * string, so the real check is js/merge.js's isSaveShaped on the way in.
+     * This exists only so a scripted abuser cannot cheaply fill the project
+     * with junk documents, and so an oversized write fails with something
+     * legible.
+     */
+    function isValidSave(data) {
+      return data.keys().hasAll(['payload', 'schema'])
+        && data.payload is string
+        && data.payload.size() > 0
+        && data.payload.size() < 900000
+        && data.schema is int;
+    }
+
+    match /saves/{saveId} {
+      allow get: if isSignedIn();
+      allow create, update: if isSignedIn() && isValidSave(request.resource.data);
+
+      /*
+       * Deleting is allowed because it adds no exposure that update does not
+       * already grant — anyone who can overwrite a save can already destroy
+       * it — and because "erase my cloud backup too" has to be a real option
+       * rather than a promise the app cannot keep.
+       */
+      allow delete: if isSignedIn();
+
+      // No `allow list`; see the file comment above.
+
+      /*
+       * Dated snapshots, so a save corrupted by a bug or a bad import can be
+       * recovered rather than faithfully mirrored. `list` is scoped to one
+       * save's own subcollection, which already requires knowing that save's
+       * ID, so it leaks nothing across saves. `delete` is what prunes them.
+       */
+      match /days/{dayKey} {
+        allow get, list: if isSignedIn();
+        allow create, update: if isSignedIn() && isValidSave(request.resource.data);
+        allow delete: if isSignedIn();
+      }
+    }
+  }
+}
