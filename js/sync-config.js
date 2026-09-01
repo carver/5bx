@@ -12,8 +12,8 @@
  * Run `npm run setup:sync` to fill this in from your own Firebase project.
  */
 export const SYNC_CONFIG = {
-  projectId: '',
-  apiKey: '',
+  projectId: 'fivebx-31d11',
+  apiKey: 'AIzaSyBYNTyGFMFnmr_6jyfxQOBSNJ2UYwXkFzU',
 };
 
 export function isSyncConfigured(config = SYNC_CONFIG) {
