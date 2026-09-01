@@ -159,11 +159,163 @@ describe('DOM', { skip }, () => {
     });
   });
 
+  /** Stands in for js/backup.js, which has its own tests. */
+  function stubBackup(status = {}, overrides = {}) {
+    const calls = [];
+    const record = (name) => (...args) => {
+      calls.push([name, ...args]);
+      return Promise.resolve({ status: 'ok' });
+    };
+    return {
+      calls,
+      status: () => ({
+        paired: false, saveId: null, lastSyncedAt: null, pending: false, ...status,
+      }),
+      startSharing: record('startSharing'),
+      joinSave: record('joinSave'),
+      syncNow: record('syncNow'),
+      listSnapshots: async () => [],
+      restoreSnapshot: record('restoreSnapshot'),
+      unpair: record('unpair'),
+      wipeCloud: record('wipeCloud'),
+      ...overrides,
+    };
+  }
+
+  describe('cloud backup', () => {
+    let config;
+
+    before(async () => {
+      config = (await import('../js/sync-config.js')).SYNC_CONFIG;
+    });
+
+    beforeEach(() => {
+      store.resetAll();
+      config.projectId = '';
+      config.apiKey = '';
+    });
+
+    const show = (backup) =>
+      renderSettings(root, { onNav() {}, applyTheme() {}, backup });
+
+    const configured = () => {
+      config.projectId = 'fivebx-test';
+      config.apiKey = 'test-key';
+    };
+
+    test('says so plainly when no project is configured', () => {
+      show(stubBackup());
+      assert.match(text(), /No backup project is configured/);
+      assert.ok(!button(/Start backing up/), 'nothing to offer without a project');
+    });
+
+    test('offers to start once a project is configured', () => {
+      configured();
+      show(stubBackup());
+      assert.ok(button(/Start backing up/));
+      assert.ok(button(/Restore from another phone/));
+    });
+
+    test('warns that the link is the only thing protecting the data', () => {
+      configured();
+      show(stubBackup());
+      // The security model is a shared secret and nothing else, so the UI has
+      // to say that rather than implying an account exists.
+      assert.match(text(), /no account and no password/i);
+    });
+
+    test('starting a backup asks the backup layer to do it', () => {
+      configured();
+      const backup = stubBackup();
+      show(backup);
+      button(/Start backing up/).click();
+      assert.deepEqual(backup.calls.map(([name]) => name), ['startSharing']);
+    });
+
+    test('reports when it last succeeded', () => {
+      configured();
+      show(stubBackup({ paired: true, saveId: 'abc', lastSyncedAt: Date.now() - 5000 }));
+      assert.match(text(), /Last backed up just now/);
+    });
+
+    test('says when something is still waiting to be sent', () => {
+      configured();
+      show(stubBackup({
+        paired: true, saveId: 'abc', lastSyncedAt: Date.now() - 7200_000, pending: true,
+      }));
+      assert.match(text(), /2 hours ago/);
+      assert.match(text(), /still to send/);
+    });
+
+    test('shows a scannable pairing code, not just a link', async () => {
+      configured();
+      const saveId = '0189ff2c-7b3a-4d5e-9f61-2c8ad4e70b13';
+      show(stubBackup({ paired: true, saveId }));
+
+      button(/Add another phone/).click();
+
+      const svg = root.querySelector('.qr svg');
+      assert.ok(svg, 'a QR code is rendered');
+      assert.match(svg.getAttribute('viewBox'), /^0 0 \d+ \d+$/);
+      assert.ok(svg.querySelector('path').getAttribute('d').length > 100,
+        'the code has modules in it rather than being an empty frame');
+      assert.ok(button(/Copy the link/), 'a copyable fallback for a camera that will not focus');
+    });
+
+    test('says there is nothing to go back to before the first day is saved', async () => {
+      configured();
+      show(stubBackup({ paired: true, saveId: 'abc' }));
+
+      button(/earlier day/).click();
+      await sleep(10);
+      assert.ok(button(/No earlier days saved yet/));
+    });
+
+    test('offers the saved days once there are some', async () => {
+      configured();
+      show(stubBackup({ paired: true, saveId: 'abc' },
+        { listSnapshots: async () => ['2026-08-30', '2026-08-31'] }));
+
+      button(/earlier day/).click();
+      await sleep(10);
+
+      const options = [...root.querySelectorAll('.snapshots option')];
+      assert.deepEqual(options.map((o) => o.value), ['2026-08-31', '2026-08-30']);
+      assert.match(text(), /Anything done since is discarded/);
+    });
+
+    test('a reset offers to erase the cloud copy too', async () => {
+      configured();
+      const backup = stubBackup({ paired: true, saveId: 'abc' });
+      show(backup);
+      window.confirm = () => true;
+
+      button(/Reset everything/).click();
+      await sleep(10);
+
+      // Without this the merge would simply restore everything on the next
+      // sync, and "reset" would be a lie.
+      assert.ok(backup.calls.some(([name]) => name === 'wipeCloud'));
+    });
+
+    test('a reset on an unpaired phone never mentions the cloud', async () => {
+      configured();
+      const backup = stubBackup();
+      show(backup);
+      window.confirm = () => true;
+
+      button(/Reset everything/).click();
+      await sleep(10);
+
+      assert.deepEqual(backup.calls, []);
+    });
+  });
+
   describe('settings', () => {
     before(() => {
       store.resetAll();
       store.updateSettings({ age: 30 });
-      renderSettings(root, { onNav() {}, applyTheme() {} });
+      renderSettings(root, { onNav() {}, applyTheme() {}, backup: stubBackup() });
     });
 
     test('shows the minimum derived from age', () => {

@@ -328,6 +328,13 @@ export function createSyncClient({
 
     push: (id, state) => write(`saves/${id}`, state),
 
+    /**
+     * Erase the stored save. Permitted because it grants nothing that write
+     * access does not already grant, and because "erase my cloud backup" has
+     * to be a real option rather than a promise the app cannot keep.
+     */
+    deleteSave: (id) => request(`saves/${id}`, { method: 'DELETE' }),
+
     /** A dated, immutable copy, so a corrupted save is recoverable. */
     writeSnapshot: (id, dateKey, state) => write(`saves/${id}/days/${dateKey}`, state),
 

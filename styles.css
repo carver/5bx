@@ -524,3 +524,29 @@ h1, h2 { margin: 0; line-height: 1.25; }
   body { font-size: 18px; }
   .clock { font-size: 5rem; }
 }
+
+/* ----------------------------------------------------------------- backup */
+
+.pairing, .snapshots {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/*
+ * The code is painted with its own white background and quiet zone (js/qr.js),
+ * so it must not be tinted, inverted, or cropped by the surrounding card in
+ * dark mode. A scanner reads the contrast, not the intent.
+ */
+.qr {
+  align-self: center;
+  width: min(72vw, 280px);
+  background: #fff;
+  border-radius: var(--radius);
+}
+
+.qr svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}

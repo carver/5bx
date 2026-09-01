@@ -38,6 +38,38 @@ export function isSaveShaped(value) {
 }
 
 /**
+ * A copy of the save with the device-local settings removed.
+ *
+ * Used on the way out, so those settings do not merely lose the merge — they
+ * never leave the phone at all, and the stored copy is the same whichever
+ * device wrote it.
+ */
+export function withoutDeviceSettings(save) {
+  const settings = { ...save.settings };
+  for (const key of DEVICE_LOCAL_SETTINGS) delete settings[key];
+  return { ...save, settings };
+}
+
+/**
+ * Whether two saves hold the same data.
+ *
+ * Compared by content rather than by JSON text: a merge rebuilds the save from
+ * both sides, so the key order can differ between two saves that are otherwise
+ * identical, and a plain stringify comparison would report a change that isn't
+ * one — and then spend a network write announcing it.
+ */
+export function sameSave(a, b) {
+  return canonicalDeep(a) === canonicalDeep(b);
+}
+
+function canonicalDeep(value) {
+  if (Array.isArray(value)) return `[${value.map(canonicalDeep).join(',')}]`;
+  if (!isPlainObject(value)) return JSON.stringify(value) ?? 'null';
+  return `{${Object.keys(value).sort()
+    .map((key) => `${JSON.stringify(key)}:${canonicalDeep(value[key])}`).join(',')}}`;
+}
+
+/**
  * Combine this device's save with another copy of it.
  *
  * @param {object} local  this device's save; wins on device-local settings

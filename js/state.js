@@ -5,6 +5,7 @@
  */
 
 import { levelName, minDaysForAge, nextPosition } from './config.js';
+import { mergeSaves, sameSave, DEVICE_LOCAL_SETTINGS } from './merge.js';
 
 const STORAGE_KEY = '5bx-state-v1';
 
@@ -24,6 +25,10 @@ function defaultState() {
       reminderEnabled: false,
       reminderTime: '07:00',  // local HH:MM
       theme: 'system',        // 'system' | 'light' | 'dark'
+      // When a *synced* setting last changed, for merging against another
+      // device's copy. See updateSettings for why device-local edits are
+      // deliberately not counted.
+      updatedAt: 0,
     },
     progress: {
       chartId: 1,
@@ -173,8 +178,22 @@ export function canAdvance() {
  * Writes
  * ---------------------------------------------------------------------- */
 
+/*
+ * `updatedAt` is only bumped when a setting that actually travels changes.
+ *
+ * Counting device-local edits would lose data: a phone where nothing but the
+ * theme was ever touched would look like the more recently edited side, and
+ * its blank age would then beat the real age set on the other phone.
+ */
 export function updateSettings(patch) {
-  state.settings = { ...state.settings, ...patch };
+  const changesSyncedSetting = Object.entries(patch).some(([key, value]) =>
+    !DEVICE_LOCAL_SETTINGS.includes(key) && state.settings[key] !== value);
+
+  state.settings = {
+    ...state.settings,
+    ...patch,
+    ...(changesSyncedSetting ? { updatedAt: Date.now() } : {}),
+  };
   save();
 }
 
@@ -214,6 +233,20 @@ export function advanceLevel() {
   if (!next) return null;
   setPosition(next.chartId, next.levelIndex, 'advance');
   return next;
+}
+
+/**
+ * Fold another copy of the save into this one, keeping both sides' history.
+ *
+ * @param {object} incoming a save from the cloud, or from a backup file
+ * @returns {boolean} whether anything here actually changed
+ */
+export function mergeIn(incoming) {
+  const merged = mergeSaves(state, incoming);
+  const changed = !sameSave(merged, state);
+  state = merged;
+  save();
+  return changed;
 }
 
 export function replaceState(incoming) {

@@ -2,13 +2,16 @@
 
 import { CHARTS, LEVELS, minDaysForAge, DECONDITIONING } from './config.js';
 import * as store from './state.js';
-import { el, mount, plural } from './ui.js';
+import { el, mount, plural, formatDate } from './ui.js';
 import * as notify from './notifications.js';
 import { checkForUpdate } from './update.js';
 import { APP_VERSION } from './version.js';
+import { isSyncConfigured } from './sync-config.js';
+import { pairingLink } from './sync.js';
+import { qrSvg } from './qr.js';
 
-export function renderSettings(root, { onNav, applyTheme }) {
-  const rerender = () => renderSettings(root, { onNav, applyTheme });
+export function renderSettings(root, { onNav, applyTheme, backup }) {
+  const rerender = () => renderSettings(root, { onNav, applyTheme, backup });
   const settings = store.getSettings();
   const progress = store.getProgress();
 
@@ -80,8 +83,11 @@ export function renderSettings(root, { onNav, applyTheme }) {
     /* -------------------------------------------------- manual level jump */
     levelSection(progress, rerender),
 
+    /* ------------------------------------------------------------ backup */
+    syncSection(backup, rerender),
+
     /* -------------------------------------------------------------- data */
-    dataSection(rerender),
+    dataSection(backup, rerender),
 
     /* ------------------------------------------------------------ version */
     versionSection(),
@@ -214,7 +220,182 @@ function levelSection(progress, rerender) {
   );
 }
 
-function dataSection(rerender) {
+/* ------------------------------------------------------------------ backup */
+
+/** "3 minutes ago", or a date once it stops being useful to count. */
+function ago(timestamp) {
+  const seconds = Math.round((Date.now() - timestamp) / 1000);
+  const units = [['day', 86400], ['hour', 3600], ['minute', 60]];
+  for (const [unit, size] of units) {
+    if (seconds >= size * 2) return `${plural(Math.floor(seconds / size), unit)} ago`;
+  }
+  return 'just now';
+}
+
+function syncSection(backup, rerender) {
+  const section = el('section.card', {}, el('h2.section-title', {}, 'Cloud backup'));
+
+  if (!isSyncConfigured()) {
+    section.append(el('p.help', {},
+      'No backup project is configured in this build, so everything stays on ' +
+      'this device. Run `npm run setup:sync` to point it at your own Firebase ' +
+      'project, then redeploy.'));
+    return section;
+  }
+
+  const status = backup.status();
+  const busy = el('p.help', {}, '');
+
+  /** Runs an operation with the buttons disabled and the outcome reported. */
+  const attempt = async (message, operation) => {
+    busy.textContent = message;
+    for (const button of section.querySelectorAll('button')) button.disabled = true;
+    try {
+      await operation();
+      rerender();
+    } catch (error) {
+      busy.textContent = error.message;
+      for (const button of section.querySelectorAll('button')) button.disabled = false;
+    }
+  };
+
+  if (!status.paired) {
+    section.append(
+      el('p.help', {},
+        'Keeps a copy of your history off this phone, and lets another phone ' +
+        'pick it up. A dated copy is kept for each of the last ' +
+        `${plural(30, 'day')}, so a bad import or a bug can be undone.`),
+      el('p.help', {},
+        'There is no account and no password. Whoever has the pairing link ' +
+        'can read and write this history, so treat it like a door key.'),
+      el('div.actions-row', {},
+        el('button.btn.btn-primary', {
+          type: 'button',
+          onclick: () => attempt('Backing up…', () => backup.startSharing()),
+        }, 'Start backing up'),
+      ),
+      el('button.btn.btn-secondary', {
+        type: 'button',
+        onclick: () => {
+          const pasted = prompt('Paste the pairing link from your other phone:');
+          const id = pasted && new URL(pasted, window.location.href).hash.replace('#join/', '');
+          if (id) attempt('Fetching…', () => backup.joinSave(id));
+        },
+      }, 'Restore from another phone'),
+      busy,
+    );
+    return section;
+  }
+
+  const lastBackedUp = status.lastSyncedAt
+    ? `Last backed up ${ago(status.lastSyncedAt)}.`
+    : 'Not backed up yet.';
+
+  section.append(
+    el('p.help', { class: status.pending ? 'warn' : '' },
+      status.pending ? `${lastBackedUp} There are changes still to send.` : lastBackedUp),
+    el('div.actions-row', {},
+      el('button.btn.btn-secondary', {
+        type: 'button',
+        onclick: () => attempt('Backing up…', () => backup.syncNow()),
+      }, 'Back up now'),
+      el('button.btn.btn-secondary', {
+        type: 'button',
+        onclick: (event) => showPairingCode(event.target, status.saveId),
+      }, 'Add another phone'),
+    ),
+    el('button.btn.btn-secondary', {
+      type: 'button',
+      onclick: (event) => showSnapshots(event.target, backup, attempt),
+    }, 'Go back to an earlier day…'),
+    busy,
+    el('div.actions-row', {},
+      el('button.btn.btn-secondary', {
+        type: 'button',
+        onclick: () => {
+          if (confirm('Stop backing up on this phone? Your history stays here, '
+            + 'and the cloud copy stays where it is for your other devices.')) {
+            backup.unpair();
+            rerender();
+          }
+        },
+      }, 'Stop on this phone'),
+      el('button.btn.btn-danger', {
+        type: 'button',
+        onclick: () => {
+          if (confirm('Erase the cloud copy and every dated backup, for every '
+            + 'device? The history on this phone is kept.')) {
+            attempt('Erasing…', () => backup.wipeCloud());
+          }
+        },
+      }, 'Erase cloud copy'),
+    ),
+  );
+
+  return section;
+}
+
+/*
+ * The link as a QR code, because the receiving phone needs no app and no
+ * typing: its camera decodes a URL straight into "open this link", which lands
+ * on the join flow.
+ */
+function showPairingCode(button, saveId) {
+  const link = pairingLink(window.location.href, saveId);
+  const panel = el('div.pairing', {},
+    el('div.qr', { html: qrSvg(link, { label: 'Pairing code for this backup' }) }),
+    el('p.help', {},
+      'Point your other phone\'s camera at this. Anyone who scans it gets full ' +
+      'access to this history.'),
+    el('button.btn.btn-secondary', {
+      type: 'button',
+      onclick: async (event) => {
+        await navigator.clipboard?.writeText(link);
+        event.target.textContent = 'Copied';
+      },
+    }, 'Copy the link instead'),
+  );
+  button.replaceWith(panel);
+}
+
+async function showSnapshots(button, backup, attempt) {
+  button.disabled = true;
+  button.textContent = 'Loading…';
+
+  let days;
+  try {
+    days = await backup.listSnapshots();
+  } catch (error) {
+    button.textContent = error.message;
+    return;
+  }
+
+  if (!days.length) {
+    button.textContent = 'No earlier days saved yet';
+    return;
+  }
+
+  let chosen = days[days.length - 1];
+  button.replaceWith(el('div.snapshots', {},
+    el('p.help', {},
+      'Replaces everything on this phone, and in the cloud, with the copy ' +
+      'saved on the day you pick. Anything done since is discarded.'),
+    field('Day', el('select.input', {
+      onchange: (event) => { chosen = event.target.value; },
+    }, days.slice().reverse().map((day) =>
+      option(day, formatDate(day), chosen)))),
+    el('button.btn.btn-danger', {
+      type: 'button',
+      onclick: () => {
+        if (confirm(`Go back to the copy saved on ${formatDate(chosen)}?`)) {
+          attempt('Restoring…', () => backup.restoreSnapshot(chosen));
+        }
+      },
+    }, 'Go back to this day'),
+  ));
+}
+
+function dataSection(backup, rerender) {
   const fileInput = el('input', {
     type: 'file',
     accept: 'application/json',
@@ -239,11 +420,16 @@ function dataSection(rerender) {
     fileInput,
     el('button.btn.btn-danger', {
       type: 'button',
-      onclick: () => {
-        if (confirm('Erase all settings, progress, and session history?')) {
-          store.resetAll();
-          rerender();
+      onclick: async () => {
+        if (!confirm('Erase all settings, progress, and session history?')) return;
+        // The merge means a local reset alone would be undone by the next
+        // sync, so erasing has to reach the cloud copy or it is not erasing.
+        if (backup.status().paired
+          && confirm('Erase the cloud copy and every dated backup too?')) {
+          await backup.wipeCloud();
         }
+        store.resetAll();
+        rerender();
       },
     }, 'Reset everything'),
   );

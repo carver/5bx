@@ -269,6 +269,14 @@ describe('writing a save', () => {
     assert.equal(doFetch.calls[1].method, 'PATCH');
   });
 
+  test('erases the stored save on request', async () => {
+    const { sync, doFetch } = client(withAuth(() => ({ json: {} })));
+    await sync.deleteSave(SAVE_ID);
+
+    assert.equal(doFetch.calls[1].method, 'DELETE');
+    assert.equal(doFetch.calls[1].url, `${DOCUMENTS}/saves/${SAVE_ID}`);
+  });
+
   test('refuses a save too large for a Firestore document', async () => {
     const huge = { ...SAVE, sessions: Array.from({ length: 40_000 }, (_, i) => ({ ...SAVE.sessions[0], ts: i })) };
     const { sync, doFetch } = client(withAuth(() => ({ json: {} })));

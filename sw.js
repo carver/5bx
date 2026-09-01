@@ -13,7 +13,7 @@
  * matter how often they reload. test/static.test.js enforces this.
  */
 
-const CACHE_VERSION = '2026.09.01-50c5b0a0';
+const CACHE_VERSION = '2026.09.01-2cfe0b12';
 const SHELL_CACHE = `5bx-shell-${CACHE_VERSION}`;
 
 /* Cache used as a key/value store shared with the page (reminder settings). */
@@ -33,6 +33,7 @@ const SHELL_FILES = [
   './js/qr.js',
   './js/sync.js',
   './js/sync-config.js',
+  './js/backup.js',
   './js/ui.js',
   './js/timer.js',
   './js/audio.js',

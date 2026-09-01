@@ -8,8 +8,13 @@ import { renderSettings } from './settings.js';
 import { syncReminder } from './notifications.js';
 import { watchForUpdate } from './update.js';
 import { createRouter } from './router.js';
+import { createSyncClient, joinIdFromHash } from './sync.js';
+import { createBackup } from './backup.js';
 
 const root = document.getElementById('app');
+
+const sync = createSyncClient();
+const backup = createBackup({ store, sync });
 
 // Views render synchronously; renderWorkout returns its own cleanup and the
 // confirm that guards quitting a session part-way through.
@@ -18,7 +23,7 @@ const { go, start } = createRouter({
     home: () => renderHome(root, { onStart: () => go('workout'), onNav: go }),
     workout: () => renderWorkout(root, { onExit: () => go('home') }),
     history: () => renderHistory(root, { onNav: go }),
-    settings: () => renderSettings(root, { onNav: go, applyTheme }),
+    settings: () => renderSettings(root, { onNav: go, applyTheme, backup }),
   },
 });
 
@@ -57,8 +62,36 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+/* ---------------------------------------------------------------- pairing */
+
+/*
+ * A pairing link opens the app at `#join/<id>`. Read it before the router
+ * starts, and strip it from the address bar straight away so a refresh cannot
+ * replay the join, then let the ordinary sync do the actual work.
+ *
+ * There is no "this will overwrite your data" prompt, because it will not:
+ * joining merges (js/merge.js), so a phone that has already logged a few
+ * workouts keeps them alongside whatever arrives.
+ */
+const joinId = joinIdFromHash(window.location.hash);
+if (joinId) {
+  sync.joinSave(joinId);
+  window.history.replaceState(null, '',
+    window.location.pathname + window.location.search);
+}
+
 /* -------------------------------------------------------------------- boot */
 
 applyTheme();
 start();
 syncReminder(store.getSettings());
+backup.start();
+
+if (joinId) {
+  // Land on Progress once the history arrives: seeing the streak and the
+  // calendar filled in is the only real confirmation that pairing worked.
+  backup.syncNow().then((result) => {
+    if (result.status === 'ok') go('history');
+    else alert(`Could not fetch that backup: ${result.error?.message ?? 'unknown error'}`);
+  });
+}
