@@ -1,1 +1,0 @@
-migrate data to a new phone, use times-tables-quizzer as an example of the high-level user goals, like profiles, saving to firebase, qr code to share with new phone. don't save so regularly, just once at the end of the exercise is sufficent
