@@ -30,7 +30,7 @@ export function renderHome(root, { onStart, onNav }) {
       el('p.hero-days', {}, `Day ${days} of ${needed} at this level`),
       days >= needed
         ? el('p.hero-hint.ready', {},
-            'Minimum days met — hit every target today to advance.')
+            'Minimum days met — complete every target comfortably today to advance.')
         : el('p.hero-hint', {},
             `${plural(needed - days, 'more day')} at this level before you ` +
             'can advance.'),

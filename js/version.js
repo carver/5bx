@@ -6,4 +6,4 @@
  * caches; test/static.test.js fails if this is stale.
  */
 
-export const APP_VERSION = '2026.09.06-478c9006';
+export const APP_VERSION = '2026.09.06-0afef71d';

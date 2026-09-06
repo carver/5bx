@@ -67,8 +67,8 @@ leg raise.
   The per-set line matches counting 1-75 in your head and starting over. The
   last set is the remainder, not a full 75 (400 steps = 75×5 + 25, so 6 sets
   and 5 breaks; there is no break after the final step). That final-set size
-  is also shown on the "did you complete the target?" checkpoint, alongside
-  the 400-step total.
+  is also shown on the "did you complete the target comfortably?" checkpoint,
+  alongside the 400-step total.
 
   Both exercise-5 readouts **freeze** during a jump block, since you aren't
   taking steps. Because those blocks come out of the same 6 minutes, the

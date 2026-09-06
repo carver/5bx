@@ -4,7 +4,7 @@
  * Flow, repeated once per exercise (5 times):
  *   ready      -> exercise name, instructions, target, big Start button
  *   running    -> countdown; pause/resume/restart; audible cue at zero
- *   checkpoint -> "Did you complete the target?" yes/no, recorded
+ *   checkpoint -> "Did you complete the target comfortably?" yes/no, recorded
  * ...then a summary that logs the session and, if earned, offers the level up.
  *
  * Every control reachable mid-workout is oversized and well separated (see
@@ -283,7 +283,7 @@ export function renderWorkout(root, { onExit }) {
       el('div.card',
         {},
         el('h2.exercise-name', {}, exercise.name),
-        el('p.question', {}, 'Did you complete the target?'),
+        el('p.question', {}, 'Did you complete the target comfortably?'),
         el('p.target', {},
           el('strong', {}, String(targets[i])), ` ${exercise.unit}`),
         pace ? el('p.note-aside', {},
@@ -367,7 +367,12 @@ export function renderWorkout(root, { onExit }) {
   function summaryMessage(logged, days, needed, next) {
     if (!logged.completed) {
       const missed = logged.results.filter((r) => !r).length;
-      return `Partial session — ${plural(missed, 'target')} missed. ` +
+      const partial = `Partial session — ${plural(missed, 'target')} missed. `;
+      if (days >= needed) {
+        return partial + 'Minimum days met, so keep going at this level ' +
+          'until you complete every target comfortably in one session.';
+      }
+      return partial +
         `Logged, and it still counts toward your days at this level ` +
         `(day ${days} of ${needed}).`;
     }

@@ -389,7 +389,7 @@ describe('DOM', { skip }, () => {
         assert.ok(button(/Restart/));
 
         await sleep(320);
-        assert.match(text(), /Did you complete the target\?/);
+        assert.match(text(), /Did you complete the target comfortably\?/);
         button(/^Yes$/).click();
       }
 
@@ -437,9 +437,34 @@ describe('DOM', { skip }, () => {
 
       assert.match(text(), /Session logged/);
       assert.match(text(), /1 target missed/);
+      assert.match(text(), /day 1 of 4/);
       assert.equal(button(/Advance to/), undefined);
       assert.equal(store.getSessions().at(-1).completed, false);
       assert.equal(store.daysAtLevel(), 1, 'a partial day still counts');
+    });
+
+    test('a partial session past the minimum says what still unlocks it', async () => {
+      store.getSessions().length = 0;
+      store.getProgress().levelStartedTs = Date.now() - 10 * 86_400_000;
+      for (let d = 1; d <= 4; d += 1) {
+        const when = new Date(Date.now() - d * 86_400_000);
+        store.getSessions().push({
+          ts: when.getTime(), date: store.todayKey(when), chartId: 1,
+          levelIndex: 1, results: [true, true, false, true, true],
+          completed: false,
+        });
+      }
+
+      renderWorkout(root, { onExit() {} });
+      for (let i = 0; i < 5; i += 1) await doExercise(i !== 2);
+
+      assert.match(text(), /Session logged/);
+      assert.match(text(), /1 target missed/);
+      assert.match(text(), /Minimum days met/);
+      assert.match(text(), /every target comfortably in one session/);
+      assert.doesNotMatch(text(), /day \d+ of \d+/,
+        'past the minimum, "day 5 of 4" reads like a bug');
+      assert.equal(button(/Advance to/), undefined);
     });
 
     test('guards leaving the same way for back and for Quit', async () => {
