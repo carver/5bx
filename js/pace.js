@@ -101,11 +101,7 @@ export function paceAt(pace, elapsed) {
   const runElapsed = fullCycles * runPerBlock +
     (inBreak ? runPerBlock : intoCycle);
 
-  // The epsilon absorbs float error so the estimate lands exactly on the
-  // target at 6:00 rather than one step short (340 * (175/340) computes to
-  // 174.99999999999997, which would floor to 174).
-  const steps = Math.max(0,
-    Math.min(targetSteps, Math.floor(runElapsed * stepsPerSecond + 1e-9)));
+  const steps = repInProgress(runElapsed * stepsPerSecond, targetSteps);
 
   /*
    * Which set of `every` steps you are in. `fullCycles` doubles as the 0-based
@@ -134,11 +130,21 @@ export function paceAt(pace, elapsed) {
  * Straight-line rep estimate for exercises 1-4: no jump blocks to pause for,
  * just a steady climb from 0 to `target` over `totalSeconds`. Used to show
  * roughly where in the set you should be, the same way exercise 5 does.
- *
- * Same epsilon trick as `paceAt` so a `1e-9`-shy float lands on the target
- * at 0:00 remaining instead of one rep short.
  */
 export function estimateAt(elapsed, totalSeconds, target) {
   const ratio = totalSeconds > 0 ? elapsed / totalSeconds : 1;
-  return Math.max(0, Math.min(target, Math.floor(ratio * target + 1e-9)));
+  return repInProgress(ratio * target, target);
+}
+
+/**
+ * The rep you should be doing right now, given `completed` fractional reps.
+ *
+ * Rounds up: the moment the clock starts you are on rep 1, and the final rep
+ * shows for its whole share of the time rather than only at the buzzer. The
+ * epsilon absorbs float error so a count computed as 75.00000000000001 still
+ * reads 75 and not 76 (which would also unfreeze exercise 5's estimate during
+ * a jump block).
+ */
+function repInProgress(completed, target) {
+  return Math.max(0, Math.min(target, Math.ceil(completed - 1e-9)));
 }

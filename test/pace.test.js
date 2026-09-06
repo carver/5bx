@@ -8,7 +8,7 @@ import { installLocalStorage } from './helpers/env.js';
 installLocalStorage();
 
 const cfg = await import('../js/config.js');
-const { createPace, paceAt } = await import('../js/pace.js');
+const { createPace, paceAt, estimateAt } = await import('../js/pace.js');
 
 const DURATION = 360;
 const INTERVAL = { every: 75, count: 10, name: 'scissor jumps' };
@@ -56,7 +56,14 @@ describe('step estimate', () => {
     assert.equal(start.inBreak, false);
   });
 
-  test('reaches the target exactly at 6:00', () => {
+  test('shows step 1 as soon as the clock is running', () => {
+    assert.equal(paceAt(pace, 0.01).steps, 1);
+  });
+
+  test('reaches the target before 6:00, and holds it there', () => {
+    const lastStepStart = pace.runSeconds - pace.stepsPerSecond ** -1 +
+      pace.blocks * pace.jumpSeconds;
+    assert.equal(paceAt(pace, lastStepStart + 0.01).steps, 400);
     assert.equal(paceAt(pace, DURATION).steps, 400);
   });
 
@@ -113,10 +120,10 @@ describe('jump blocks', () => {
     assert.ok(near(mid.breakRemaining, 6));
   });
 
-  test('running resumes after the block', () => {
+  test('running resumes after the block on the next step', () => {
     const after = paceAt(pace, pace.runPerBlock + pace.jumpSeconds + 0.001);
     assert.equal(after.inBreak, false);
-    assert.equal(after.steps, 75);
+    assert.equal(after.steps, 76);
   });
 
   test('no break is scheduled at the very end', () => {
@@ -140,11 +147,11 @@ describe('per-set counter', () => {
     assert.equal(during.setIndex, 1);
   });
 
-  test('restarts from zero once running resumes', () => {
+  test('restarts from step 1 once running resumes', () => {
     const after = paceAt(pace, pace.runPerBlock + pace.jumpSeconds + 0.001);
-    assert.equal(after.setSteps, 0);
+    assert.equal(after.setSteps, 1);
     assert.equal(after.setIndex, 2);
-    assert.equal(after.steps, 75, 'running total must not reset');
+    assert.equal(after.steps, 76, 'running total must not reset');
   });
 
   test('the final set is the remainder, not a full 75', () => {
@@ -256,5 +263,55 @@ describe('edge cases', () => {
     assert.equal(slower.jumpSeconds, 20);
     assert.ok(slower.runSeconds < pace.runSeconds);
     assert.equal(paceAt(slower, DURATION).steps, 400);
+  });
+});
+
+describe('rep estimate for exercises 1-4', () => {
+  // A 60s exercise with 10 reps: one rep every 6s.
+  const SECONDS = 60;
+  const REPS = 10;
+
+  test('is zero before the clock starts', () => {
+    assert.equal(estimateAt(0, SECONDS, REPS), 0);
+  });
+
+  test('shows rep 1 from the first tick', () => {
+    assert.equal(estimateAt(0.01, SECONDS, REPS), 1);
+  });
+
+  test('holds a rep until its full share of the time is up', () => {
+    assert.equal(estimateAt(6, SECONDS, REPS), 1);
+    assert.equal(estimateAt(6.01, SECONDS, REPS), 2);
+  });
+
+  test('reaches the target during the last rep, not at the buzzer', () => {
+    assert.equal(estimateAt(54.01, SECONDS, REPS), REPS);
+    assert.equal(estimateAt(SECONDS, SECONDS, REPS), REPS);
+  });
+
+  test('never exceeds the target', () => {
+    assert.equal(estimateAt(SECONDS + 5, SECONDS, REPS), REPS);
+  });
+
+  test('never goes backwards', () => {
+    let previous = 0;
+    for (let t = 0; t <= SECONDS; t += 0.05) {
+      const reps = estimateAt(t, SECONDS, REPS);
+      assert.ok(reps >= previous, `dropped from ${previous} to ${reps}`);
+      previous = reps;
+    }
+  });
+
+  test('absorbs float error at exact rep boundaries', () => {
+    // 0.1 * 3 / 0.3 is not exactly 1 in floating point.
+    assert.equal(estimateAt(0.1 * 3, 0.3, 1), 1);
+  });
+
+  test('a zero target stays at zero', () => {
+    assert.equal(estimateAt(30, SECONDS, 0), 0);
+  });
+
+  test('a zero duration is already at the target', () => {
+    assert.equal(estimateAt(0, 0, REPS), REPS);
   });
 });
