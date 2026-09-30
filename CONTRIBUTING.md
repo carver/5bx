@@ -17,7 +17,7 @@ above keep holding; the reasoning is in
 [docs/adr/0001](docs/adr/0001-cloud-backup-via-a-shared-secret-save-id.md).
 
 The dev-only dependencies are `jsdom`, used by `test/dom.test.js`,
-`test/router.test.js` and `test/app.test.js`, and `qrcode-generator`, used by
+`test/router.test.js`, `test/app.test.js` and `test/preview.test.js`, and `qrcode-generator`, used by
 `test/qr.test.js` as a second implementation to check `js/qr.js` against.
 Neither ships.
 
@@ -29,14 +29,21 @@ npm test            # full suite
 npm run verify      # quick sanity check on js/config.js
 npm run stamp       # re-stamp the app version after changing a shipped file
 npm run serve       # static server on http://localhost:8000
+npm run preview     # like serve, plus URLs that jump to hard-to-reach states
 ```
 
 `install_dev.sh` points git at `.githooks/`. Its `pre-commit` checks the
 version stamp and the config in under a second. `agent-pre-commit` runs what CI
 runs; git ignores it, and `agent-commit-gate` runs it before an agent commits.
 
-`npm test` works on a bare checkout with nothing installed. The three DOM
-suites skip themselves if `jsdom` is missing and the rest still run. Run
+To check a UI change by eye, `npm run preview` prints a URL per scenario in
+`tools/preview-scenarios.js`, such as the workout summary, which is otherwise
+11 minutes away. Screenshot one with
+`web-shot --size 390x844 'http://localhost:8765/__preview.html?scenario=summary'`.
+Add a scenario there rather than writing a one-off page.
+
+`npm test` works on a bare checkout with nothing installed. The DOM suites
+skip themselves if `jsdom` is missing and the rest still run. Run
 `npm install` to get them too.
 
 ES modules don't load over `file://`, so use `npm run serve` rather than
@@ -78,6 +85,7 @@ opening `index.html` directly.
 | `test/handover.test.js` | Moving a history to a new phone, end to end, against an in-memory Firestore |
 | `test/router.test.js` | View switching and the back button, against stub views (needs `jsdom`) |
 | `test/app.test.js` | The booted app end to end, driven by taps and the back button (needs `jsdom`) |
+| `test/preview.test.js` | `tools/preview.mjs` serving and path guard; every preview scenario still reaches its view (needs `jsdom`) |
 
 Tests use the built-in `node:test` runner, no framework. Each file runs in its
 own process, so a test that mutates module state (the DOM suite shrinks
