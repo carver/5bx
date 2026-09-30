@@ -24,11 +24,16 @@ Neither ships.
 ## Running things
 
 ```sh
+./install_dev.sh    # once per checkout: dev dependencies and git hooks
 npm test            # full suite
 npm run verify      # quick sanity check on js/config.js
 npm run stamp       # re-stamp the app version after changing a shipped file
 npm run serve       # static server on http://localhost:8000
 ```
+
+`install_dev.sh` points git at `.githooks/`. Its `pre-commit` checks the
+version stamp and the config in under a second. `agent-pre-commit` runs what CI
+runs; git ignores it, and `agent-commit-gate` runs it before an agent commits.
 
 `npm test` works on a bare checkout with nothing installed. The three DOM
 suites skip themselves if `jsdom` is missing and the rest still run. Run

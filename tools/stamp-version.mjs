@@ -85,6 +85,14 @@ export function committedVersion() {
 
 export const hashOf = (version) => String(version).split('-').pop();
 
+/** Whether js/version.js and sw.js both carry the stamp the contents call for. */
+export function isCurrent() {
+  const current = committedVersion();
+  const sw = readFileSync(repoPath('sw.js'), 'utf8');
+  return Boolean(current) && hashOf(current) === contentHash() &&
+    sw.includes(`const CACHE_VERSION = '${current}';`);
+}
+
 /** Today in the local timezone, as YYYY.MM.DD. */
 function datePart(date = new Date()) {
   const pad = (n) => String(n).padStart(2, '0');
@@ -99,15 +107,11 @@ function datePart(date = new Date()) {
  * @returns {{version: string, changed: boolean}}
  */
 export function stamp() {
-  const hash = contentHash();
   const current = committedVersion();
+  if (isCurrent()) return { version: current, changed: false };
+
+  const hash = contentHash();
   const sw = readFileSync(repoPath('sw.js'), 'utf8');
-  const cacheMatches = sw.includes(`const CACHE_VERSION = '${current}';`);
-
-  if (current && hashOf(current) === hash && cacheMatches) {
-    return { version: current, changed: false };
-  }
-
   const version = `${datePart()}-${hash}`;
   writeFileSync(repoPath(VERSION_FILE),
     `/*
@@ -125,7 +129,18 @@ export const APP_VERSION = '${version}';
   return { version, changed: true };
 }
 
+/*
+ * `--check` reports a stale stamp without writing, for the pre-commit hook:
+ * a hook that rewrote files would leave the fix out of the commit it blocked.
+ */
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  if (process.argv.includes('--check')) {
+    if (!isCurrent()) {
+      console.error('Version stamp is stale; run `npm run stamp`.');
+      process.exit(1);
+    }
+    process.exit(0);
+  }
   const { version, changed } = stamp();
   console.log(changed
     ? `stamped ${version} (js/version.js, sw.js)`
