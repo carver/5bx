@@ -68,6 +68,12 @@ opening `index.html` directly.
    powerless against it, and the deploy looks perfectly healthy from the
    outside. `npm test` fails when the stamp is stale, so CI catches a miss.
 
+4. **Edited a session or level-log entry that was already logged?** Stamp it
+   with `revisedTs` (see `flipResult` in `js/state.js`). The original reaches
+   the cloud seconds after it is logged, and the merge keeps whichever copy
+   has the latest `revisedTs`. Without the stamp, the next sync can bring the
+   old copy back.
+
 ## Test layout
 
 | File | Covers |
