@@ -219,17 +219,22 @@ export function logSession(results) {
 }
 
 /**
- * Correct the answers of an already-logged session, such as a mis-tapped
- * Yes/No noticed on the summary. Stamped with `revisedTs` so the correction
- * outranks the copy already synced; see union() in merge.js.
+ * Flip one answer of an already-logged session, for a mis-tapped Yes/No.
+ * Stamped with `revisedTs` so the correction outranks the copy already
+ * synced; see union() in merge.js.
  */
-export function reviseSession(ts, results) {
+export function flipResult(ts, exerciseIndex) {
   const index = state.sessions.findIndex((s) => s.ts === ts);
   if (index === -1) throw new Error(`No session logged at ${ts}`);
+  const old = state.sessions[index];
+  if (!(exerciseIndex in old.results)) {
+    throw new Error(`No exercise ${exerciseIndex} in the session at ${ts}`);
+  }
 
+  const results = old.results.map((r, i) => (i === exerciseIndex ? !r : r));
   const session = {
-    ...state.sessions[index],
-    results: results.slice(),
+    ...old,
+    results,
     completed: results.every(Boolean),
     revisedTs: Date.now(),
   };

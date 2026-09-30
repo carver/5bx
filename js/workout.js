@@ -19,6 +19,7 @@ import * as store from './state.js';
 import { Countdown, acquireWakeLock, releaseWakeLock } from './timer.js';
 import { unlockAudio, cueTimeUp, cueInterval, cueBlip } from './audio.js';
 import { el, mount, formatTime, plural } from './ui.js';
+import { resultList } from './results.js';
 
 export function renderWorkout(root, { onExit }) {
   const { chartId, levelIndex } = store.getProgress();
@@ -332,27 +333,10 @@ export function renderWorkout(root, { onExit }) {
     const needed = store.requiredDays();
     const next = nextPosition(chartId, levelIndex);
 
-    const flip = (i) => {
+    const list = resultList(logged, (i) => {
       cueBlip();
-      const results = logged.results.map((r, j) => (j === i ? !r : r));
-      showSummary(store.reviseSession(logged.ts, results));
-    };
-
-    const list = el('ul.result-list', {},
-      chart.exercises.map((ex, i) => el('li',
-        { class: logged.results[i] ? 'ok' : 'miss' },
-        el('button.result-flip', {
-          type: 'button',
-          'aria-label': `${ex.name}: ${logged.results[i] ? 'hit' : 'missed'}. ` +
-            'Tap to change.',
-          onclick: () => flip(i),
-        },
-        el('span.result-mark', {}, logged.results[i] ? '✓' : '✗'),
-        el('span.result-name', {}, `${i + 1}. ${ex.name}`),
-        el('span.result-target', {}, `${targets[i]} ${ex.unit}`),
-        ),
-      )),
-    );
+      showSummary(store.flipResult(logged.ts, i));
+    });
 
     const actions = el('div.actions', {});
 

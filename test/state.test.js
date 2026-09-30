@@ -203,30 +203,42 @@ describe('session logging', () => {
 });
 
 describe('correcting a session', () => {
-  test('replaces the answers and recomputes completion', () => {
+  test('flips one answer and recomputes completion', () => {
     const logged = store.logSession([true, true, false, true, true]);
-    const revised = store.reviseSession(logged.ts, [true, true, true, true, true]);
+    const revised = store.flipResult(logged.ts, 2);
 
     assert.equal(revised.completed, true);
-    assert.deepEqual(store.getSessions(), [revised]);
     assert.deepEqual(revised.results, [true, true, true, true, true]);
+    assert.deepEqual(store.getSessions(), [revised]);
+  });
+
+  test('flipping twice restores the answer', () => {
+    const logged = store.logSession([true, true, true, true, true]);
+    store.flipResult(logged.ts, 0);
+    const revised = store.flipResult(logged.ts, 0);
+    assert.deepEqual(revised.results, logged.results);
   });
 
   test('stamps the correction so it outranks the original in a merge', () => {
     const logged = store.logSession([true, true, false, true, true]);
-    const revised = store.reviseSession(logged.ts, [true, true, true, true, true]);
+    const revised = store.flipResult(logged.ts, 2);
     assert.ok(revised.revisedTs >= logged.ts);
   });
 
   test('survives a reload', () => {
     const logged = store.logSession([true, true, false, true, true]);
-    store.reviseSession(logged.ts, [true, true, true, true, true]);
+    store.flipResult(logged.ts, 2);
     const saved = JSON.parse(localStorage.getItem('5bx-state-v1'));
     assert.equal(saved.sessions[0].completed, true);
   });
 
   test('refuses a session that was never logged', () => {
-    assert.throws(() => store.reviseSession(12345, [true, true, true, true, true]));
+    assert.throws(() => store.flipResult(12345, 0), /No session/);
+  });
+
+  test('refuses an exercise the session does not have', () => {
+    const logged = store.logSession([true, true, true, true, true]);
+    assert.throws(() => store.flipResult(logged.ts, 5), /No exercise/);
   });
 });
 

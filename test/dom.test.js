@@ -132,6 +132,31 @@ describe('DOM', { skip }, () => {
       assert.match(text(), /No sessions yet/);
     });
 
+    test('a past session can be opened and an answer flipped', () => {
+      store.resetAll();
+      const when = new Date(Date.now() - 3 * 86_400_000);
+      store.getSessions().push({
+        ts: when.getTime(), date: store.todayKey(when), chartId: 1,
+        levelIndex: 0, results: [true, true, false, true, true],
+        completed: false,
+      });
+      renderHistory(root, { onNav() {} });
+      assert.match(text(), /0\s*full sessions/);
+
+      const entry = () => root.querySelector('.session-entry');
+      const flips = () => [...entry().querySelectorAll('.result-flip')];
+      assert.equal(entry().open, false, 'collapsed, so a stray tap flips nothing');
+      entry().querySelector('summary').click();
+      assert.equal(flips().length, 5);
+      assert.match(entry().textContent, /Toe touch/);
+
+      flips()[2].click();
+      assert.equal(store.getSessions()[0].completed, true);
+      assert.equal(entry().open, true, 'stays open to flip it back');
+      assert.match(text(), /1\s*full sessions/);
+      assert.match(entry().textContent, /complete/);
+    });
+
     test('sparkline treads are as wide as the time spent at the level', () => {
       // A level held for a minute, then one held for 6 of the last 8 days.
       const day = 86_400_000;

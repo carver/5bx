@@ -452,19 +452,32 @@ h1, h2 { margin: 0; line-height: 1.25; }
   padding: 4px;
 }
 
-.log-list li {
+/* Direct children only: a session entry nests a .result-list of its own. */
+.log-list > li,
+.session-entry > summary {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   gap: 12px;
   padding: 10px 0;
-  border-bottom: 1px solid var(--border);
   font-size: 0.9rem;
 }
 
-.log-list li:last-child { border-bottom: none; }
+.log-list > li { border-bottom: 1px solid var(--border); }
+.log-list > li:last-child { border-bottom: none; }
+.log-list > li.session-row { display: block; padding: 0; }
 .log-meta { color: var(--text-dim); font-size: 0.8rem; text-align: right; }
-.log-list .ok .log-main { color: var(--ok); }
+.log-list > .ok .log-main { color: var(--ok); }
+
+.session-entry > summary {
+  min-height: 48px;
+  cursor: pointer;
+  list-style: none;
+}
+.session-entry > summary::-webkit-details-marker { display: none; }
+.session-entry > summary .log-meta::after { content: ' ▸'; }
+.session-entry[open] > summary .log-meta::after { content: ' ▾'; }
+.session-entry > .summary-hint { padding-bottom: 10px; }
 
 /* -------------------------------------------------------------- settings */
 

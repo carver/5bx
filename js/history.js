@@ -3,16 +3,31 @@
 import { levelName, absoluteLevel } from './config.js';
 import * as store from './state.js';
 import { el, mount, formatDate, plural } from './ui.js';
+import { resultList } from './results.js';
 
 const CALENDAR_WEEKS = 9;
 
 export function renderHistory(root, { onNav }) {
+  /*
+   * A flip changes the stats and the calendar too, so the whole view redraws,
+   * keeping the corrected session open so a wrong flip is one tap to undo.
+   */
+  const flip = (ts, i) => {
+    store.flipResult(ts, i);
+    draw(ts);
+  };
+
+  const draw = (openTs) => mount(root, ...historyView(onNav, openTs, flip));
+  draw(null);
+}
+
+function historyView(onNav, openTs, onFlip) {
   const { chartId, levelIndex } = store.getProgress();
   const sessions = store.getSessions();
   const days = store.daysAtLevel();
   const needed = store.requiredDays();
 
-  mount(root,
+  return [
     el('h1.view-title', {}, 'Progress'),
 
     el('div.card',
@@ -47,7 +62,7 @@ export function renderHistory(root, { onNav }) {
     levelList(store.getLevelLog()),
 
     el('h2.section-title', {}, 'Recent sessions'),
-    sessionList(sessions),
+    sessionList(sessions, openTs, onFlip),
 
     el('nav.nav',
       {},
@@ -56,7 +71,7 @@ export function renderHistory(root, { onNav }) {
       el('button.btn.btn-secondary',
         { type: 'button', onclick: () => onNav('settings') }, 'Settings'),
     ),
-  );
+  ];
 }
 
 function stat(value, label) {
@@ -173,20 +188,30 @@ function levelList(levelLog) {
   );
 }
 
-function sessionList(sessions) {
+/*
+ * Each session opens to its per-exercise answers, where a mis-tapped one can
+ * be flipped. Collapsed by default, so scrolling past cannot flip anything.
+ */
+function sessionList(sessions, openTs, onFlip) {
   if (!sessions.length) {
     return el('p.empty', {}, 'No sessions yet. Your first one starts the log.');
   }
   const recent = sessions.slice(-10).reverse();
   return el('ul.log-list',
     {},
-    recent.map((s) => el('li',
+    recent.map((s) => el('li.session-row',
       { class: s.completed ? 'ok' : 'miss' },
-      el('span.log-main', {},
-        `${formatDate(s.date)} — Chart ${s.chartId} · ${levelName(s.levelIndex)}`),
-      el('span.log-meta', {},
-        `${s.results.filter(Boolean).length} of ${s.results.length} targets` +
-        `${s.completed ? ' · complete' : ''}`),
+      el('details.session-entry', { open: s.ts === openTs },
+        el('summary', {},
+          el('span.log-main', {},
+            `${formatDate(s.date)} — Chart ${s.chartId} · ${levelName(s.levelIndex)}`),
+          el('span.log-meta', {},
+            `${s.results.filter(Boolean).length} of ${s.results.length} targets` +
+            `${s.completed ? ' · complete' : ''}`),
+        ),
+        resultList(s, (i) => onFlip(s.ts, i)),
+        el('p.summary-hint', {}, 'Tap a result to change it.'),
+      ),
     )),
   );
 }
