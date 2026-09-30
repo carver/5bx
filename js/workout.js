@@ -5,7 +5,8 @@
  *   ready      -> exercise name, instructions, target, big Start button
  *   running    -> countdown; pause/resume/restart; audible cue at zero
  *   checkpoint -> "Did you complete the target comfortably?" yes/no, recorded
- * ...then a summary that logs the session and, if earned, offers the level up.
+ * ...then a summary that logs the session, lets a mis-tapped answer be flipped,
+ * and, if earned, offers the level up.
  *
  * Every control reachable mid-workout is oversized and well separated (see
  * .btn sizing in styles.css) because the app is used with shaky hands.
@@ -318,17 +319,38 @@ export function renderWorkout(root, { onExit }) {
     cleanup();
 
     // Log first, then read the counters, so today counts toward days-at-level.
-    const logged = store.logSession(session.results);
+    showSummary(store.logSession(session.results));
+  }
+
+  /*
+   * Each result is a button that flips the logged answer, for a Yes or No
+   * tapped by mistake. The session is corrected in place rather than logged
+   * again, and the advance offer follows the corrected answers.
+   */
+  function showSummary(logged) {
     const days = store.daysAtLevel();
     const needed = store.requiredDays();
     const next = nextPosition(chartId, levelIndex);
 
+    const flip = (i) => {
+      cueBlip();
+      const results = logged.results.map((r, j) => (j === i ? !r : r));
+      showSummary(store.reviseSession(logged.ts, results));
+    };
+
     const list = el('ul.result-list', {},
       chart.exercises.map((ex, i) => el('li',
-        { class: session.results[i] ? 'ok' : 'miss' },
-        el('span.result-mark', {}, session.results[i] ? '✓' : '✗'),
+        { class: logged.results[i] ? 'ok' : 'miss' },
+        el('button.result-flip', {
+          type: 'button',
+          'aria-label': `${ex.name}: ${logged.results[i] ? 'hit' : 'missed'}. ` +
+            'Tap to change.',
+          onclick: () => flip(i),
+        },
+        el('span.result-mark', {}, logged.results[i] ? '✓' : '✗'),
         el('span.result-name', {}, `${i + 1}. ${ex.name}`),
         el('span.result-target', {}, `${targets[i]} ${ex.unit}`),
+        ),
       )),
     );
 
@@ -358,6 +380,7 @@ export function renderWorkout(root, { onExit }) {
         {},
         el('p.summary-line', {}, `${store.positionLabel(chartId, levelIndex)}`),
         list,
+        el('p.summary-hint', {}, 'Tapped the wrong answer? Tap a result to change it.'),
         el('p.summary-note', {}, summaryMessage(logged, days, needed, next)),
       ),
       actions,

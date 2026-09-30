@@ -98,6 +98,28 @@ describe('session log', () => {
   });
 });
 
+describe('corrected sessions', () => {
+  const original = session(T0, { completed: false });
+  const corrected = { ...session(T0), revisedTs: T0 + 60_000 };
+
+  test('a correction beats the copy the cloud already has, from either side', () => {
+    for (const [local, remote] of [[corrected, original], [original, corrected]]) {
+      const merged = mergeSaves(save({ sessions: [local] }), save({ sessions: [remote] }));
+      assert.deepEqual(merged.sessions, [corrected]);
+    }
+  });
+
+  test('the latest of two corrections wins', () => {
+    const recorrected = { ...original, revisedTs: T0 + 120_000 };
+    const merged = mergeSaves(
+      save({ sessions: [recorrected] }),
+      save({ sessions: [corrected] }),
+    );
+
+    assert.deepEqual(merged.sessions, [recorrected]);
+  });
+});
+
 describe('level log', () => {
   test('collapses the start entries both devices generated to the earliest', () => {
     const merged = mergeSaves(
@@ -219,12 +241,22 @@ describe('save version', () => {
 });
 
 describe('algebraic properties', () => {
+  // Overlapping days across saves give the same session a chance to arrive
+  // with different corrections, including two corrections made at one instant.
+  const randomSession = (rng, ts, levelIndex) => {
+    const completed = rng() < 0.5;
+    const revision = Math.floor(rng() * 3);
+    return revision
+      ? { ...session(ts, { levelIndex, completed }), revisedTs: ts + revision }
+      : session(ts, { levelIndex, completed });
+  };
+
   const randomSave = (rng, installedAt) => {
     const sessions = [];
     const levelLog = [levelEntry(installedAt, { reason: 'start' })];
     let levelIndex = 0;
     for (let day = 1; day < 40; day += 1) {
-      if (rng() < 0.5) sessions.push(session(installedAt + day * DAY, { levelIndex }));
+      if (rng() < 0.5) sessions.push(randomSession(rng, installedAt + day * DAY, levelIndex));
       if (rng() < 0.1) {
         levelIndex += 1;
         levelLog.push(levelEntry(installedAt + day * DAY, { levelIndex }));

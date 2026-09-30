@@ -202,6 +202,34 @@ describe('session logging', () => {
   });
 });
 
+describe('correcting a session', () => {
+  test('replaces the answers and recomputes completion', () => {
+    const logged = store.logSession([true, true, false, true, true]);
+    const revised = store.reviseSession(logged.ts, [true, true, true, true, true]);
+
+    assert.equal(revised.completed, true);
+    assert.deepEqual(store.getSessions(), [revised]);
+    assert.deepEqual(revised.results, [true, true, true, true, true]);
+  });
+
+  test('stamps the correction so it outranks the original in a merge', () => {
+    const logged = store.logSession([true, true, false, true, true]);
+    const revised = store.reviseSession(logged.ts, [true, true, true, true, true]);
+    assert.ok(revised.revisedTs >= logged.ts);
+  });
+
+  test('survives a reload', () => {
+    const logged = store.logSession([true, true, false, true, true]);
+    store.reviseSession(logged.ts, [true, true, true, true, true]);
+    const saved = JSON.parse(localStorage.getItem('5bx-state-v1'));
+    assert.equal(saved.sessions[0].completed, true);
+  });
+
+  test('refuses a session that was never logged', () => {
+    assert.throws(() => store.reviseSession(12345, [true, true, true, true, true]));
+  });
+});
+
 describe('streaks', () => {
   test('no sessions means no streak', () => {
     assert.equal(store.currentStreak(), 0);

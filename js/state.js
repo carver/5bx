@@ -37,7 +37,8 @@ function defaultState() {
       levelStartedTs: now,
     },
     // Every session ever, newest last.
-    // { ts, date, chartId, levelIndex, results: [bool x5], completed }
+    // { ts, date, chartId, levelIndex, results: [bool x5], completed,
+    //   revisedTs? }  revisedTs only once the answers were corrected
     sessions: [],
     // Level changes, newest last. { ts, date, chartId, levelIndex, reason }
     levelLog: [
@@ -213,6 +214,26 @@ export function logSession(results) {
     completed: results.every(Boolean),
   };
   state.sessions.push(session);
+  save();
+  return session;
+}
+
+/**
+ * Correct the answers of an already-logged session, such as a mis-tapped
+ * Yes/No noticed on the summary. Stamped with `revisedTs` so the correction
+ * outranks the copy already synced; see union() in merge.js.
+ */
+export function reviseSession(ts, results) {
+  const index = state.sessions.findIndex((s) => s.ts === ts);
+  if (index === -1) throw new Error(`No session logged at ${ts}`);
+
+  const session = {
+    ...state.sessions[index],
+    results: results.slice(),
+    completed: results.every(Boolean),
+    revisedTs: Date.now(),
+  };
+  state.sessions[index] = session;
   save();
   return session;
 }

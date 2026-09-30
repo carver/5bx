@@ -467,6 +467,38 @@ describe('DOM', { skip }, () => {
       assert.equal(button(/Advance to/), undefined);
     });
 
+    test('a mis-tapped answer can be flipped on the summary', async () => {
+      store.getSessions().length = 0;
+      store.getProgress().levelStartedTs = Date.now() - 10 * 86_400_000;
+      for (let d = 1; d <= 3; d += 1) {
+        const when = new Date(Date.now() - d * 86_400_000);
+        store.getSessions().push({
+          ts: when.getTime(), date: store.todayKey(when), chartId: 1,
+          levelIndex: 1, results: [true, true, true, true, true],
+          completed: true,
+        });
+      }
+
+      renderWorkout(root, { onExit() {} });
+      for (let i = 0; i < 5; i += 1) await doExercise(i !== 2);
+      assert.equal(button(/Advance to/), undefined);
+
+      const rows = () => [...root.querySelectorAll('.result-list button')];
+      assert.equal(rows().length, 5, 'every result is a flip button');
+
+      rows()[2].click();
+      assert.match(text(), /Session complete/);
+      assert.ok(button(/Advance to/), 'the corrected session earns the advance');
+      assert.equal(store.getSessions().length, 4, 'corrected, not logged twice');
+      assert.equal(store.getSessions().at(-1).completed, true);
+
+      rows()[0].click();
+      assert.match(text(), /Session logged/);
+      assert.equal(button(/Advance to/), undefined);
+      assert.deepEqual(store.getSessions().at(-1).results,
+        [false, true, true, true, true]);
+    });
+
     test('guards leaving the same way for back and for Quit', async () => {
       /* The router asks confirmLeave() before letting anything, an Android
        * back press included, take the workout off screen. */

@@ -341,13 +341,23 @@ h1, h2 { margin: 0; line-height: 1.25; }
   flex-direction: column;
 }
 
-.result-list li {
+.result-list li { border-bottom: 1px solid var(--border); }
+
+/* A plain-looking row that is really a button: tapping flips the answer. */
+.result-flip {
   display: grid;
   grid-template-columns: 1.5rem 1fr auto;
   align-items: baseline;
   gap: 10px;
+  width: 100%;
+  min-height: 48px;
   padding: 9px 0;
-  border-bottom: 1px solid var(--border);
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
 .result-list li:last-child { border-bottom: none; }
@@ -355,6 +365,7 @@ h1, h2 { margin: 0; line-height: 1.25; }
 .result-list .ok .result-mark { color: var(--ok); }
 .result-list .miss .result-mark { color: var(--miss); }
 .result-target { color: var(--text-dim); font-size: 0.85rem; }
+.summary-hint { margin: 0; color: var(--text-dim); font-size: 0.85rem; }
 
 /* ---------------------------------------------------------- home preview */
 

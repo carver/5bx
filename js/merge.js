@@ -141,21 +141,30 @@ function isOrigin(entry) {
 
 /*
  * Entries are identified by the millisecond they were recorded, so the same
- * session arriving from both devices collapses to one. Two *different* entries
- * sharing a timestamp would mean one person finishing two workouts in the same
- * millisecond; it cannot happen, but the tie is still broken by content rather
- * than by argument order, since a merge that disagreed with itself depending on
- * which side was called "local" would never converge.
+ * session arriving from both devices collapses to one.
+ *
+ * A session corrected after it was logged carries `revisedTs`, and the latest
+ * correction wins: the uncorrected copy has usually reached the cloud already,
+ * and would otherwise come back on the next sync.
+ *
+ * Any remaining tie is broken by content rather than by argument order, since a
+ * merge that disagreed with itself depending on which side was called "local"
+ * would never converge.
  */
 function union(entries) {
   const byTimestamp = new Map();
   for (const entry of entries) {
     const existing = byTimestamp.get(entry.ts);
-    if (!existing || canonical(entry) < canonical(existing)) {
-      byTimestamp.set(entry.ts, entry);
-    }
+    if (!existing || outranks(entry, existing)) byTimestamp.set(entry.ts, entry);
   }
   return [...byTimestamp.values()].sort((a, b) => a.ts - b.ts);
+}
+
+function outranks(entry, other) {
+  const revised = entry.revisedTs ?? 0;
+  const otherRevised = other.revisedTs ?? 0;
+  if (revised !== otherRevised) return revised > otherRevised;
+  return canonical(entry) < canonical(other);
 }
 
 /** Key order can differ between two copies of the same entry; this ignores it. */
