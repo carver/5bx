@@ -1,4 +1,4 @@
-/* Progress & history view: days at level, streak, calendar, level movement. */
+/* Progress & history view: streak at level, daily streak, calendar, level movement. */
 
 import { levelName, absoluteLevel } from './config.js';
 import * as store from './state.js';
@@ -24,7 +24,7 @@ export function renderHistory(root, { onNav }) {
 function historyView(onNav, openTs, onFlip) {
   const { chartId, levelIndex } = store.getProgress();
   const sessions = store.getSessions();
-  const days = store.daysAtLevel();
+  const levelStreak = store.streakAtLevel();
   const needed = store.requiredDays();
 
   return [
@@ -36,9 +36,9 @@ function historyView(onNav, openTs, onFlip) {
       el('p.hero-position', {}, store.positionLabel(chartId, levelIndex)),
       el('div.progress', {},
         el('div.progress-bar', {
-          style: `width:${Math.min(100, (days / needed) * 100)}%`,
+          style: `width:${Math.min(100, (levelStreak / needed) * 100)}%`,
         })),
-      el('p.hero-days', {}, `Day ${days} of ${needed} at this level`),
+      el('p.hero-days', {}, `${levelStreak} of ${needed} complete days in a row`),
     ),
 
     el('div.stats',

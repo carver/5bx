@@ -76,9 +76,9 @@ describe('DOM', { skip }, () => {
       renderHome(root, { onStart() {}, onNav() {} });
     });
 
-    test('shows the current level and day counter', () => {
+    test('shows the current level and streak counter', () => {
       assert.match(text(), /Chart 1 · D-/);
-      assert.match(text(), /Day 0 of 4/);
+      assert.match(text(), /0 of 4 complete days in a row/);
     });
 
     test('previews all five exercises', () => {
@@ -422,11 +422,11 @@ describe('DOM', { skip }, () => {
       assert.equal(root.querySelectorAll('.result-list li').length, 5);
       assert.equal(store.getSessions().length, 1);
       assert.equal(store.getSessions()[0].completed, true);
-      assert.equal(store.daysAtLevel(), 1);
+      assert.equal(store.streakAtLevel(), 1);
     });
 
     test('withholds the advance until the minimum days are met', () => {
-      assert.match(text(), /stick with this level for 3 more days/);
+      assert.match(text(), /3 more complete days before advancing \(1 of 4\)/);
       assert.equal(button(/Advance to/), undefined);
       button(/^Done$/).click();
       assert.equal(exited, true);
@@ -450,7 +450,7 @@ describe('DOM', { skip }, () => {
       button(/Advance to/).click();
       assert.match(text(), /Level up/);
       assert.equal(store.getProgress().levelIndex, 1);
-      assert.equal(store.daysAtLevel(), 0, 'day counter resets on advance');
+      assert.equal(store.streakAtLevel(), 0, 'streak at level resets on advance');
     });
 
     test('a partial session logs but never offers an advance', async () => {
@@ -462,10 +462,25 @@ describe('DOM', { skip }, () => {
 
       assert.match(text(), /Session logged/);
       assert.match(text(), /1 target missed/);
-      assert.match(text(), /day 1 of 4/);
+      assert.match(text(), /starts your count of complete days over \(0 of 4\)/);
       assert.equal(button(/Advance to/), undefined);
       assert.equal(store.getSessions().at(-1).completed, false);
-      assert.equal(store.daysAtLevel(), 1, 'a partial day still counts');
+      assert.equal(store.streakAtLevel(), 0, 'a partial day restarts the count');
+    });
+
+    test('a partial session after a complete one today keeps the day', async () => {
+      store.getSessions().length = 0;
+      store.getProgress().levelStartedTs = Date.now() - 10 * 86_400_000;
+      store.logSession([true, true, true, true, true]);
+
+      renderWorkout(root, { onExit() {} });
+      for (let i = 0; i < 5; i += 1) await doExercise(i !== 2);
+
+      assert.match(text(), /Session logged/);
+      assert.match(text(), /1 target missed/);
+      assert.match(text(), /earlier session today hit every target/);
+      assert.match(text(), /1 of 4/);
+      assert.equal(button(/Advance to/), undefined);
     });
 
     test('a partial session past the minimum says what still unlocks it', async () => {
@@ -475,20 +490,21 @@ describe('DOM', { skip }, () => {
         const when = new Date(Date.now() - d * 86_400_000);
         store.getSessions().push({
           ts: when.getTime(), date: store.todayKey(when), chartId: 1,
-          levelIndex: 1, results: [true, true, false, true, true],
-          completed: false,
+          levelIndex: 0, results: [true, true, true, true, true],
+          completed: true,
         });
       }
+      store.logSession([true, true, true, true, true]); // then "Stay at this level"
 
       renderWorkout(root, { onExit() {} });
       for (let i = 0; i < 5; i += 1) await doExercise(i !== 2);
 
       assert.match(text(), /Session logged/);
-      assert.match(text(), /1 target missed/);
-      assert.match(text(), /Minimum days met/);
+      assert.match(text(), /earlier session today hit every target/);
+      assert.match(text(), /Minimum met/);
       assert.match(text(), /every target comfortably in one session/);
-      assert.doesNotMatch(text(), /day \d+ of \d+/,
-        'past the minimum, "day 5 of 4" reads like a bug');
+      assert.doesNotMatch(text(), /\d+ of \d+/,
+        'past the minimum, "5 of 4" reads like a bug');
       assert.equal(button(/Advance to/), undefined);
     });
 

@@ -9,7 +9,7 @@ export function renderHome(root, { onStart, onNav }) {
   const { chartId, levelIndex } = store.getProgress();
   const chart = getChart(chartId);
   const targets = getTargets(chartId, levelIndex);
-  const days = store.daysAtLevel();
+  const levelStreak = store.streakAtLevel();
   const needed = store.requiredDays();
   const streak = store.currentStreak();
   const idle = store.daysSinceLastSession();
@@ -24,16 +24,16 @@ export function renderHome(root, { onStart, onNav }) {
       el('div.progress',
         {},
         el('div.progress-bar', {
-          style: `width:${Math.min(100, (days / needed) * 100)}%`,
+          style: `width:${Math.min(100, (levelStreak / needed) * 100)}%`,
         }),
       ),
-      el('p.hero-days', {}, `Day ${days} of ${needed} at this level`),
-      days >= needed
+      el('p.hero-days', {}, `${levelStreak} of ${needed} complete days in a row`),
+      levelStreak >= needed
         ? el('p.hero-hint.ready', {},
-            'Minimum days met — complete every target comfortably today to advance.')
+            'Minimum met — complete every target comfortably today to advance.')
         : el('p.hero-hint', {},
-            `${plural(needed - days, 'more day')} at this level before you ` +
-            'can advance.'),
+            `${plural(needed - levelStreak, 'more complete day')} before you can ` +
+            'advance. Rest days pause the count; a partial session restarts it.'),
     ),
 
     el('div.actions',

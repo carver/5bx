@@ -159,11 +159,11 @@ store.updateSettings({ minDaysOverride: 3 });
 check('override beats the age table', store.requiredDays() === 3);
 store.updateSettings({ minDaysOverride: null });
 
-store.getProgress().levelStartedTs -= 1000; // see daysAtLevel() on the boundary
+store.getProgress().levelStartedTs -= 1000; // see streakAtLevel() on the boundary
 store.logSession([true, true, true, true, true]);
 store.logSession([true, true, true, true, true]);
-check('two sessions on one day count as one day', store.daysAtLevel() === 1,
-  `got ${store.daysAtLevel()}`);
+check('two sessions on one day count as one day', store.streakAtLevel() === 1,
+  `got ${store.streakAtLevel()}`);
 check('advance blocked before the minimum days', store.canAdvance() === false);
 
 store.getProgress().levelStartedTs -= 10 * 86400000;
@@ -174,12 +174,12 @@ for (let d = 1; d <= 3; d += 1) {
     results: [true, true, true, true, true], completed: true,
   });
 }
-check('distinct days accumulate', store.daysAtLevel() === 4,
-  `got ${store.daysAtLevel()}`);
+check('complete days in a row accumulate', store.streakAtLevel() === 4,
+  `got ${store.streakAtLevel()}`);
 check('advance unlocked at the minimum', store.canAdvance() === true);
 store.advanceLevel();
-check('advancing resets the day counter', store.daysAtLevel() === 0,
-  `got ${store.daysAtLevel()}`);
+check('advancing resets the streak at level', store.streakAtLevel() === 0,
+  `got ${store.streakAtLevel()}`);
 
 /* ------------------------------------------------------------------- done */
 

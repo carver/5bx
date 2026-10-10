@@ -319,7 +319,7 @@ export function renderWorkout(root, { onExit }) {
   function renderSummary() {
     cleanup();
 
-    // Log first, then read the counters, so today counts toward days-at-level.
+    // Log first, then read the counters, so today counts toward the streak.
     showSummary(store.logSession(session.results));
   }
 
@@ -329,7 +329,7 @@ export function renderWorkout(root, { onExit }) {
    * again, and the advance offer follows the corrected answers.
    */
   function showSummary(logged) {
-    const days = store.daysAtLevel();
+    const levelStreak = store.streakAtLevel();
     const needed = store.requiredDays();
     const next = nextPosition(chartId, levelIndex);
 
@@ -340,7 +340,7 @@ export function renderWorkout(root, { onExit }) {
 
     const actions = el('div.actions', {});
 
-    if (logged.completed && next && days >= needed) {
+    if (logged.completed && next && levelStreak >= needed) {
       actions.append(
         el('button.btn.btn-primary', {
           type: 'button',
@@ -365,35 +365,38 @@ export function renderWorkout(root, { onExit }) {
         el('p.summary-line', {}, `${store.positionLabel(chartId, levelIndex)}`),
         list,
         el('p.summary-hint', {}, 'Tapped the wrong answer? Tap a result to change it.'),
-        el('p.summary-note', {}, summaryMessage(logged, days, needed, next)),
+        el('p.summary-note', {}, summaryMessage(logged, levelStreak, needed, next)),
       ),
       actions,
     );
   }
 
-  function summaryMessage(logged, days, needed, next) {
+  function summaryMessage(logged, levelStreak, needed, next) {
     if (!logged.completed) {
       const missed = logged.results.filter((r) => !r).length;
       const partial = `Partial session — ${plural(missed, 'target')} missed. `;
-      if (days >= needed) {
-        return partial + 'Minimum days met, so keep going at this level ' +
-          'until you complete every target comfortably in one session.';
+      // Only an earlier complete session today keeps the streak above 0.
+      if (levelStreak >= needed) {
+        return partial + 'An earlier session today hit every target, so ' +
+          'today still counts. Minimum met: keep going at this level until ' +
+          'you complete every target comfortably in one session.';
       }
-      return partial +
-        `Logged, and it still counts toward your days at this level ` +
-        `(day ${days} of ${needed}).`;
+      if (levelStreak > 0) {
+        return partial + 'An earlier session today hit every target, so ' +
+          `today still counts (${levelStreak} of ${needed}).`;
+      }
+      return partial + 'Logged, and it starts your count of complete days ' +
+        `over (0 of ${needed}).`;
     }
     if (!next) {
       return 'All targets hit — and you are at the top of Chart 6. ' +
         'There is nothing left to advance to.';
     }
-    if (days < needed) {
-      const remaining = needed - days;
-      return `Nice, all targets hit — but stick with this level for ` +
-        `${plural(remaining, 'more day')} before advancing ` +
-        `(day ${days} of ${needed}).`;
+    if (levelStreak < needed) {
+      return `Nice, all targets hit — ${plural(needed - levelStreak, 'more complete day')} ` +
+        `before advancing (${levelStreak} of ${needed}).`;
     }
-    return `All targets hit and you have put in ${plural(days, 'day')} at ` +
+    return `All targets hit, ${plural(levelStreak, 'complete day')} in a row at ` +
       `this level. You have earned the next one.`;
   }
 

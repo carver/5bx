@@ -76,8 +76,11 @@ leg raise.
   target at 6:00. Tune the assumed block duration with
   `CONFIG.intervalMovementSeconds`.
 - **Progression.** A level is only offered when a session hit *every* target
-  **and** you have logged sessions on enough distinct days at that level.
-- **History.** Day-at-level progress, streak, a 9-week calendar, and a step
+  **and** you have enough complete days in a row at that level. A day counts
+  as complete when any session that day hit every target. A rest day pauses
+  the count; a partial day restarts it, so one strong day after a run of
+  partials doesn't earn a level.
+- **History.** Streak-at-level progress, streak, a 9-week calendar, and a step
   chart of your movement through the levels, scaled to the highest level
   you've actually reached so early progress doesn't read as a flat line. The
   chart's x axis is elapsed time, so each step is as wide as the time you

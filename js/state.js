@@ -33,7 +33,7 @@ function defaultState() {
     progress: {
       chartId: 1,
       levelIndex: 0,
-      // Sessions logged at/after this timestamp count toward days-at-level.
+      // Sessions logged at/after this timestamp count toward streakAtLevel().
       levelStartedTs: now,
     },
     // Every session ever, newest last.
@@ -126,19 +126,26 @@ export function requiredDays() {
 }
 
 /**
- * Distinct calendar dates on which a session was logged since arriving at the
- * current level. Multiple sessions in one day count once; partial sessions
- * count too (the spec counts days spent at the level, not perfect days).
+ * Complete days in a row at the current level, counting back from today: the
+ * count that gates advancing. A day is complete if any session that day hit
+ * every target. A day with no session is skipped, so a rest day pauses the
+ * streak; a partial day ends it, so one strong day after a run of partials
+ * doesn't earn a level.
  *
  * Strictly after `levelStartedTs`, not at-or-after: the session that earns an
  * advance was performed at the *old* level and must not seed the new one.
  */
-export function daysAtLevel() {
+export function streakAtLevel() {
   const since = state.progress.levelStartedTs;
-  const dates = new Set(
-    state.sessions.filter((s) => s.ts > since).map((s) => s.date),
-  );
-  return dates.size;
+  const completeByDate = new Map();
+  for (const s of state.sessions) {
+    if (s.ts > since) {
+      completeByDate.set(s.date, completeByDate.get(s.date) || s.completed);
+    }
+  }
+  const newestFirst = [...completeByDate.keys()].sort().reverse();
+  const firstPartial = newestFirst.findIndex((date) => !completeByDate.get(date));
+  return firstPartial === -1 ? newestFirst.length : firstPartial;
 }
 
 /** Consecutive days with at least one session, counting back from today. */
@@ -171,7 +178,7 @@ export function daysSinceLastSession() {
 
 /** True when a fully-completed session would unlock the next level. */
 export function canAdvance() {
-  return daysAtLevel() >= requiredDays() &&
+  return streakAtLevel() >= requiredDays() &&
     nextPosition(state.progress.chartId, state.progress.levelIndex) !== null;
 }
 
@@ -243,7 +250,7 @@ export function flipResult(ts, exerciseIndex) {
   return session;
 }
 
-/** Move to a specific chart+level and restart the days-at-level counter. */
+/** Move to a specific chart+level and restart the streak at level. */
 export function setPosition(chartId, levelIndex, reason = 'manual') {
   const now = Date.now();
   state.progress = { chartId, levelIndex, levelStartedTs: now };

@@ -192,8 +192,8 @@ function levelSection(progress, rerender) {
     {},
     el('h2.section-title', {}, 'Jump to a level'),
     el('p.help', {},
-      'Sets your chart and level directly and resets the days-at-level ' +
-      `counter to zero. After a break longer than ` +
+      'Sets your chart and level directly and resets your count of ' +
+      `complete days to zero. After a break longer than ` +
       `${DECONDITIONING.restartAfterDays} days (or ` +
       `${DECONDITIONING.restartAfterIllnessDays} after illness) the plan says ` +
       `to restart at Chart 1, D-. ${DECONDITIONING.note}`),
@@ -211,7 +211,7 @@ function levelSection(progress, rerender) {
       type: 'button',
       onclick: () => {
         if (confirm(`Move to Chart ${chartId} ${LEVELS[levelIndex]} and reset ` +
-                    'the days-at-level counter?')) {
+                    'your count of complete days?')) {
           store.setPosition(chartId, levelIndex, 'manual');
           rerender();
         }

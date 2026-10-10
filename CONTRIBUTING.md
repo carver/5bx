@@ -79,7 +79,7 @@ opening `index.html` directly.
 | File | Covers |
 | ---- | ------ |
 | `test/config.test.js` | Chart data, rep tables re-checked against the printed source, age table, level progression helpers |
-| `test/state.test.js` | Days-at-level counting, the advance gate, streaks, persistence |
+| `test/state.test.js` | Streak-at-level counting, the advance gate, streaks, persistence |
 | `test/pace.test.js` | Exercise 5 pacing: jump-block schedule, step estimate, per-set counter |
 | `test/static.test.js` | Deployment integrity: service worker cache list, manifest, relative paths, no runtime deps |
 | `test/dom.test.js` | Renders every view and drives a full guided workout (needs `jsdom`) |
@@ -104,7 +104,7 @@ Worth knowing about two deliberate testing choices:
   down to D-), the reverse of how `js/config.js` stores them. It's a real
   transcription check, not a restatement of the config.
 - **`test/state.test.js` backdates timestamps** rather than waiting. The whole
-  suite runs inside a millisecond or two, and `daysAtLevel()` counts sessions
+  suite runs inside a millisecond or two, and `streakAtLevel()` counts sessions
   *strictly after* arriving at a level, so tests move `levelStartedTs` backwards
   instead of relying on real time passing.
 

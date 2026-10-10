@@ -1,8 +1,8 @@
 /*
- * Progression rules: days at level, the advance gate, streaks, persistence.
+ * Progression rules: streak at level, the advance gate, streaks, persistence.
  *
  * A note on timing: the whole suite executes inside a millisecond or two, and
- * daysAtLevel() deliberately counts sessions STRICTLY after `levelStartedTs`
+ * streakAtLevel() deliberately counts sessions STRICTLY after `levelStartedTs`
  * (the session that earns an advance belongs to the old level). Tests
  * therefore nudge `levelStartedTs` backwards rather than relying on real time
  * passing between calls.
@@ -65,44 +65,82 @@ describe('required days', () => {
   });
 });
 
-describe('days at level', () => {
+describe('streak at level', () => {
   test('starts at zero', () => {
-    assert.equal(store.daysAtLevel(), 0);
+    assert.equal(store.streakAtLevel(), 0);
   });
 
-  test('a session counts the day', () => {
+  test('a complete session counts the day', () => {
     arrivedDaysAgo(1);
     store.logSession([true, true, true, true, true]);
-    assert.equal(store.daysAtLevel(), 1);
+    assert.equal(store.streakAtLevel(), 1);
   });
 
   test('two sessions on one day still count once', () => {
     arrivedDaysAgo(1);
     store.logSession([true, true, true, true, true]);
     store.logSession([true, true, true, true, true]);
-    assert.equal(store.daysAtLevel(), 1);
+    assert.equal(store.streakAtLevel(), 1);
   });
 
-  test('a partial session still counts the day', () => {
-    arrivedDaysAgo(1);
-    store.logSession([true, false, true, true, true]);
-    assert.equal(store.daysAtLevel(), 1);
-  });
-
-  test('distinct days accumulate', () => {
+  test('complete days in a row accumulate', () => {
     arrivedDaysAgo(10);
     sessionDaysAgo(3);
     sessionDaysAgo(2);
     sessionDaysAgo(1);
     store.logSession([true, true, true, true, true]);
-    assert.equal(store.daysAtLevel(), 4);
+    assert.equal(store.streakAtLevel(), 4);
+  });
+
+  test('a partial session today restarts the count', () => {
+    arrivedDaysAgo(10);
+    sessionDaysAgo(3);
+    sessionDaysAgo(2);
+    sessionDaysAgo(1);
+    store.logSession([true, false, true, true, true]);
+    assert.equal(store.streakAtLevel(), 0);
+  });
+
+  test('only complete days since the last partial count', () => {
+    arrivedDaysAgo(10);
+    sessionDaysAgo(5);
+    sessionDaysAgo(4);
+    sessionDaysAgo(3, [true, true, false, true, true]);
+    sessionDaysAgo(2);
+    sessionDaysAgo(1);
+    assert.equal(store.streakAtLevel(), 2);
+  });
+
+  test('a missed day pauses the streak rather than breaking it', () => {
+    arrivedDaysAgo(10);
+    sessionDaysAgo(6);
+    sessionDaysAgo(4);
+    sessionDaysAgo(1);
+    assert.equal(store.streakAtLevel(), 3);
+  });
+
+  test('a day with a partial and a complete session counts as complete', () => {
+    arrivedDaysAgo(10);
+    sessionDaysAgo(2);
+    sessionDaysAgo(1, [true, false, true, true, true]);
+    sessionDaysAgo(1);
+    assert.equal(store.streakAtLevel(), 2);
+  });
+
+  test('correcting a partial session to complete restores the streak', () => {
+    arrivedDaysAgo(10);
+    sessionDaysAgo(1);
+    const logged = store.logSession([true, false, true, true, true]);
+    assert.equal(store.streakAtLevel(), 0);
+    store.flipResult(logged.ts, 1);
+    assert.equal(store.streakAtLevel(), 2);
   });
 
   test('sessions logged before arriving at the level do not count', () => {
     sessionDaysAgo(3);
     sessionDaysAgo(2);
     arrivedDaysAgo(0); // arrive now; the older sessions belong to the past
-    assert.equal(store.daysAtLevel(), 0);
+    assert.equal(store.streakAtLevel(), 0);
   });
 });
 
@@ -124,7 +162,15 @@ describe('advance gate', () => {
     assert.equal(store.canAdvance(), true);
   });
 
-  test('advancing moves one level and resets the day counter', () => {
+  test('one complete day after a run of partials does not unlock it', () => {
+    store.updateSettings({ age: 35 });
+    arrivedDaysAgo(10);
+    for (let d = 6; d >= 1; d -= 1) sessionDaysAgo(d, [true, true, true, false, true]);
+    store.logSession([true, true, true, true, true]);
+    assert.equal(store.canAdvance(), false);
+  });
+
+  test('advancing moves one level and resets the streak at level', () => {
     store.updateSettings({ minDaysOverride: 1 });
     arrivedDaysAgo(5);
     store.logSession([true, true, true, true, true]);
@@ -132,7 +178,7 @@ describe('advance gate', () => {
     const next = store.advanceLevel();
     assert.deepEqual(next, { chartId: 1, levelIndex: 1 });
     assert.equal(store.getProgress().levelIndex, 1);
-    assert.equal(store.daysAtLevel(), 0);
+    assert.equal(store.streakAtLevel(), 0);
     assert.equal(store.getLevelLog().at(-1).reason, 'advance');
   });
 
@@ -153,15 +199,15 @@ describe('advance gate', () => {
 });
 
 describe('manual position changes', () => {
-  test('jumping resets the day counter', () => {
+  test('jumping resets the streak at level', () => {
     arrivedDaysAgo(10);
     sessionDaysAgo(1);
-    assert.equal(store.daysAtLevel(), 1);
+    assert.equal(store.streakAtLevel(), 1);
 
     store.setPosition(3, 5, 'manual');
     assert.equal(store.getProgress().chartId, 3);
     assert.equal(store.getProgress().levelIndex, 5);
-    assert.equal(store.daysAtLevel(), 0);
+    assert.equal(store.streakAtLevel(), 0);
   });
 
   test('dropping back does not resurrect old days at that level', () => {
@@ -170,7 +216,7 @@ describe('manual position changes', () => {
     sessionDaysAgo(1);
     store.setPosition(2, 0, 'manual');
     store.setPosition(1, 0, 'manual'); // back to where those sessions happened
-    assert.equal(store.daysAtLevel(), 0);
+    assert.equal(store.streakAtLevel(), 0);
   });
 
   test('every change is recorded in the level log', () => {
@@ -315,7 +361,7 @@ describe('persistence', () => {
     assert.equal(store.getProgress().chartId, 1);
     assert.equal(store.getProgress().levelIndex, 0);
     assert.equal(store.getSessions().length, 0);
-    assert.equal(store.daysAtLevel(), 0);
+    assert.equal(store.streakAtLevel(), 0);
   });
 });
 
