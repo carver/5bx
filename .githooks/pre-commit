@@ -1,4 +1,6 @@
 #!/bin/sh
+# Agents' commits also run the slower agent-pre-commit (llm-toolbox agent-commit-gate).
+if [ -n "${AI_AGENT:-}" ] && [ -z "${AGENT_PRE_COMMIT:-}" ]; then AGENT_PRE_COMMIT=1 "$(dirname "$0")/agent-pre-commit" || exit; fi
 # Fast checks, run by git for every committer. Must stay under 5 seconds;
 # the full suite lives in agent-pre-commit and CI. Installed by install_dev.sh.
 set -e

@@ -1,6 +1,6 @@
 #!/bin/sh
-# What CI checks, run before each commit an agent makes (via agent-commit-gate,
-# not git). Too slow for the ordinary pre-commit hook. Installed by install_dev.sh.
+# What CI checks, run before each commit an agent makes (the pre-commit
+# hook runs it when $AI_AGENT is set). Too slow for the ordinary pre-commit hook. Installed by install_dev.sh.
 set -e
 cd "$(git rev-parse --show-toplevel)"
 npm test --silent
