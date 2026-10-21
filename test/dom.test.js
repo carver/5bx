@@ -389,10 +389,25 @@ describe('DOM', { skip }, () => {
 
   describe('guided workout', () => {
     let exited;
+    let realConfirm;
+    let prompts;   // each message confirm() was asked, once answerConfirm stubs it
+
+    const answerConfirm = (answer) => {
+      window.confirm = (message) => { prompts.push(message); return answer; };
+      globalThis.confirm = window.confirm;
+    };
 
     before(() => {
       // ~0.05s per exercise keeps the whole run near two seconds.
       cfg.TIMING_SECONDS.forEach((_, i) => { cfg.TIMING_SECONDS[i] = 0.05; });
+      realConfirm = window.confirm;
+    });
+
+    beforeEach(() => { prompts = []; });
+
+    afterEach(() => {
+      window.confirm = realConfirm;
+      globalThis.confirm = realConfirm;
     });
 
     test('walks all five exercises and logs a completed session', async () => {
@@ -543,41 +558,126 @@ describe('DOM', { skip }, () => {
     test('guards leaving the same way for back and for Quit', async () => {
       /* The router asks confirmLeave() before letting anything, an Android
        * back press included, take the workout off screen. */
-      const realConfirm = window.confirm;
-      let asked = 0;
-      const answerConfirm = (answer) => {
-        window.confirm = () => { asked += 1; return answer; };
-        globalThis.confirm = window.confirm;
-      };
+      store.resetAll();
+      store.getProgress().levelStartedTs = Date.now();
+      const view = renderWorkout(root, { onExit() {} });
 
-      try {
+      answerConfirm(false);
+      assert.equal(view.confirmLeave(), true,
+        'nothing is logged before the first exercise, so leave silently');
+      assert.equal(prompts.length, 0);
+
+      await doExercise(true);
+      assert.equal(view.confirmLeave(), false, 'a declined confirm keeps you here');
+      assert.equal(prompts.length, 1, 'a session in progress must prompt');
+
+      answerConfirm(true);
+      assert.equal(view.confirmLeave(), true);
+      assert.equal(prompts.length, 2);
+
+      for (let i = 1; i < 5; i += 1) await doExercise(true);
+      assert.match(text(), /Session complete/);
+      answerConfirm(false);
+      assert.equal(view.confirmLeave(), true,
+        'the summary is already logged, so back must not offer to discard it');
+      assert.equal(prompts.length, 2, 'no prompt once the session is logged');
+    });
+
+    describe('redo', () => {
+      beforeEach(() => {
         store.resetAll();
         store.getProgress().levelStartedTs = Date.now();
-        const view = renderWorkout(root, { onExit() {} });
+      });
 
-        answerConfirm(false);
-        assert.equal(view.confirmLeave(), true,
-          'nothing is logged before the first exercise, so leave silently');
-        assert.equal(asked, 0);
+      /** Click the button matching `re`, failing on its absence, not a TypeError. */
+      const tap = (re) => {
+        const found = button(re);
+        assert.ok(found, `no button matching ${re}`);
+        found.click();
+      };
 
+      test('the first Start screen has nothing to redo', () => {
+        renderWorkout(root, { onExit() {} });
+        assert.match(text(), /Exercise 1 of 5/);
+        assert.equal(button(/Redo/), undefined);
+      });
+
+      test('the next Start screen redoes the previous exercise, dropping its answer',
+        async () => {
+          renderWorkout(root, { onExit() {} });
+          await doExercise(true);
+          await doExercise(false);
+          assert.match(text(), /Exercise 3 of 5/);
+          assert.ok(button(/^Redo exercise 2$/), 'redo button on exercise 3');
+
+          answerConfirm(true);
+          tap(/^Redo exercise 2$/);
+          assert.equal(prompts.length, 1, 'redo asks first');
+          assert.match(prompts[0], /Redo exercise 2\?/);
+          assert.match(text(), /Exercise 2 of 5/);
+          assert.ok(button(/^Start$/));
+
+          for (let i = 1; i < 5; i += 1) await doExercise(true);
+          assert.match(text(), /Session complete/);
+          assert.deepEqual(store.getSessions().at(-1).results,
+            [true, true, true, true, true]);
+        });
+
+      test('the checkpoint redoes the exercise just ended, recording nothing',
+        async () => {
+          renderWorkout(root, { onExit() {} });
+          await doExercise(false);
+          tap(/^Start$/);
+          tap(/^End exercise$/);
+          assert.match(text(), /Did you complete the target comfortably\?/);
+          assert.ok(button(/^Redo exercise$/), 'redo button on the checkpoint');
+
+          answerConfirm(true);
+          tap(/^Redo exercise$/);
+          assert.equal(prompts.length, 1, 'redo asks first');
+          assert.match(prompts[0], /Redo exercise 2\?/);
+          assert.doesNotMatch(prompts[0], /answer/i,
+            'nothing is answered yet, so nothing is dropped');
+          assert.match(text(), /Exercise 2 of 5/);
+          assert.ok(button(/^Start$/));
+
+          for (let i = 1; i < 5; i += 1) await doExercise(true);
+          assert.deepEqual(store.getSessions().at(-1).results,
+            [false, true, true, true, true]);
+        });
+
+      test('a declined redo leaves the screen as it was', async () => {
+        renderWorkout(root, { onExit() {} });
         await doExercise(true);
-        assert.equal(view.confirmLeave(), false, 'a declined confirm keeps you here');
-        assert.equal(asked, 1, 'a session in progress must prompt');
-
-        answerConfirm(true);
-        assert.equal(view.confirmLeave(), true);
-        assert.equal(asked, 2);
-
-        for (let i = 1; i < 5; i += 1) await doExercise(true);
-        assert.match(text(), /Session complete/);
         answerConfirm(false);
-        assert.equal(view.confirmLeave(), true,
-          'the summary is already logged, so back must not offer to discard it');
-        assert.equal(asked, 2, 'no prompt once the session is logged');
-      } finally {
-        window.confirm = realConfirm;
-        globalThis.confirm = realConfirm;
-      }
+
+        tap(/^Redo exercise 1$/);
+        assert.match(text(), /Exercise 2 of 5/);
+        assert.ok(button(/^Start$/));
+
+        tap(/^Start$/);
+        tap(/^End exercise$/);
+        tap(/^Redo exercise$/);
+        assert.match(text(), /Did you complete the target comfortably\?/);
+        assert.equal(prompts.length, 2);
+
+        tap(/^Yes$/);
+        for (let i = 2; i < 5; i += 1) await doExercise(true);
+        assert.deepEqual(store.getSessions().at(-1).results,
+          [true, true, true, true, true]);
+      });
+
+      test('redoing back to the first exercise leaves nothing at stake', async () => {
+        const view = renderWorkout(root, { onExit() {} });
+        await doExercise(true);
+        answerConfirm(true);
+        tap(/^Redo exercise 1$/);
+        assert.match(text(), /Exercise 1 of 5/);
+
+        prompts.length = 0;
+        assert.equal(view.confirmLeave(), true, 'no answer left to lose');
+        assert.equal(prompts.length, 0, 'so leaving does not prompt');
+      });
     });
   });
 

@@ -51,7 +51,9 @@ leg raise.
 
 - **Guided mode.** Walks through the 5 exercises one at a time. Each gets its
   own instructions, target, timer (2:00 / 1:00 / 1:00 / 1:00 / 6:00), and an
-  explicit "did you hit the target?" checkpoint before moving on.
+  explicit "did you hit the target?" checkpoint before moving on. Ended an
+  exercise by mistake? **Redo exercise**, on its checkpoint or on the next
+  exercise's Start screen, drops its answer and runs it again.
 - **Audible + haptic cues** at the end of each exercise, synthesised with
   WebAudio so there are no sound files to download.
 - **Live pacing estimate on every exercise.** A running "~N of target" count

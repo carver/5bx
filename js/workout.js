@@ -8,6 +8,10 @@
  * ...then a summary that logs the session, lets a mis-tapped answer be flipped,
  * and, if earned, offers the level up.
  *
+ * An exercise ended by mistake can be redone, from its checkpoint or from the
+ * next exercise's ready screen. Both redo buttons are half-width and ask
+ * first, since a stray tap on one costs a whole exercise.
+ *
  * Every control reachable mid-workout is oversized and well separated (see
  * .btn sizing in styles.css) because the app is used with shaky hands.
  */
@@ -93,6 +97,7 @@ export function renderWorkout(root, { onExit }) {
           type: 'button',
           onclick: () => confirmQuit(),
         }, 'Quit workout'),
+        i > 0 ? redoButton(i - 1, { answered: true }) : null,
       ),
     );
   }
@@ -302,6 +307,7 @@ export function renderWorkout(root, { onExit }) {
           type: 'button',
           onclick: () => answer(false),
         }, 'No'),
+        redoButton(i, { answered: false }),
       ),
     );
   }
@@ -426,6 +432,26 @@ export function renderWorkout(root, { onExit }) {
 
   function confirmQuit() {
     if (confirmLeave()) exit();
+  }
+
+  /*
+   * Back to exercise `i`'s ready screen, dropping its answer and any after.
+   * Shown on the next exercise's screen once `i` is answered, so the label
+   * names it; on its own checkpoint it needs no number.
+   */
+  function redoButton(i, { answered }) {
+    const n = i + 1;
+    const warning = answered ? 'Its answer is dropped.' : "This attempt isn't recorded.";
+    return el('button.btn.btn-secondary.btn-redo', {
+      type: 'button',
+      onclick: () => {
+        if (!confirm(`Redo exercise ${n}? ${warning}`)) return;
+        cueBlip();
+        session.index = i;
+        session.results.length = i;
+        renderReady();
+      },
+    }, answered ? `Redo exercise ${n}` : 'Redo exercise');
   }
 
   renderReady();

@@ -36,6 +36,12 @@ function tap(root, label) {
   [...root.querySelectorAll('button')].find((b) => b.textContent === label).click();
 }
 
+/** Start the current exercise and end it at once, landing on its checkpoint. */
+function endExercise(root) {
+  tap(root, 'Start');
+  tap(root, 'End exercise');
+}
+
 export const scenarios = {
   /** Workout summary with exercise 3 missed; flipping it unlocks the advance. */
   async summary(root) {
@@ -46,10 +52,30 @@ export const scenarios = {
     seedDays(store, 3);
     renderWorkout(root, { onExit() {} });
     for (let i = 0; i < 5; i += 1) {
-      tap(root, 'Start');
-      tap(root, 'End exercise');
+      endExercise(root);
       tap(root, i === 2 ? 'No' : 'Yes');
     }
+  },
+
+  /** Exercise 3's Start screen, with the button that redoes exercise 2. */
+  async redo(root) {
+    const { store, renderWorkout } = await load();
+    store.resetAll();
+    renderWorkout(root, { onExit() {} });
+    for (let i = 0; i < 2; i += 1) {
+      endExercise(root);
+      tap(root, 'Yes');
+    }
+  },
+
+  /** Exercise 2's checkpoint, with the button that redoes it. */
+  async checkpoint(root) {
+    const { store, renderWorkout } = await load();
+    store.resetAll();
+    renderWorkout(root, { onExit() {} });
+    endExercise(root);
+    tap(root, 'Yes');
+    endExercise(root);
   },
 
   /** Progress view with a week of sessions, one of them partial. */

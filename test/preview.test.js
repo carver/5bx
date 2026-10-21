@@ -75,6 +75,22 @@ describe('preview scenarios', { skip: JSDOM ? false : 'jsdom is not installed' }
     assert.match(root.textContent, /Advance to/);
   });
 
+  const buttonLabels = () =>
+    [...root.querySelectorAll('button')].map((b) => b.textContent);
+
+  test('redo lands on exercise 3 with a way back to exercise 2', async () => {
+    await scenarios.redo(root);
+    assert.match(root.textContent, /Exercise 3 of 5/);
+    assert.ok(buttonLabels().includes('Redo exercise 2'), buttonLabels().join());
+  });
+
+  test('checkpoint lands on the question with a redo', async () => {
+    await scenarios.checkpoint(root);
+    assert.match(root.textContent, /Exercise 2 of 5/);
+    assert.match(root.textContent, /Did you complete the target comfortably\?/);
+    assert.ok(buttonLabels().includes('Redo exercise'), buttonLabels().join());
+  });
+
   test('history shows a week of sessions', async () => {
     await scenarios.history(root);
     assert.equal(root.querySelectorAll('.session-entry').length, 7);

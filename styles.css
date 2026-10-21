@@ -236,6 +236,15 @@ h1, h2 { margin: 0; line-height: 1.25; }
 
 .actions-answer { gap: 26px; }
 
+/* Half-width and short, since a stray tap costs a whole exercise. */
+.btn-redo {
+  align-self: center;
+  width: 50%;
+  min-height: 48px;
+  padding: 10px 14px;
+  font-size: 0.95rem;
+}
+
 .btn-yes { background: var(--ok); border-color: var(--ok); }
 
 .btn-no {
